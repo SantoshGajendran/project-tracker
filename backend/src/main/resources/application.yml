@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: project-tracker-backend
+  config:
+    import: optional:file:secrets.properties
   datasource:
     url: jdbc:postgresql://localhost:5432/project_tracker
     username: postgres

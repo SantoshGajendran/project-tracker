@@ -24,3 +24,7 @@ Thumbs.db
 
 # Graphify
 graphify-out/
+
+# Local configuration secrets
+backend/secrets.properties
+secrets.properties

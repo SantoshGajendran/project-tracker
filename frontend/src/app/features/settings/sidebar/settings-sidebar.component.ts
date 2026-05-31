@@ -1,7 +1,8 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
+import { AuthService } from '../../../core/services/auth.service';
 
 interface NavItem {
   label: string;
@@ -23,7 +24,7 @@ interface NavGroup {
     <!-- Mobile dropdown selection -->
     <div class="mobile-nav-container">
       <select class="input-field mobile-nav-select" [value]="activeRoute" (change)="onMobileNav($event)">
-        <optgroup *ngFor="let g of groups" [label]="g.label">
+        <optgroup *ngFor="let g of groups()" [label]="g.label">
           <option *ngFor="let item of g.items" [value]="item.route">{{ item.label }}</option>
         </optgroup>
       </select>
@@ -31,7 +32,7 @@ interface NavGroup {
 
     <!-- Desktop sidebar nav -->
     <div class="settings-sidebar">
-      <div class="settings-group" *ngFor="let g of groups">
+      <div class="settings-group" *ngFor="let g of groups()">
         <div class="settings-group-label">{{ g.label }}</div>
         <a 
           *ngFor="let item of g.items" 
@@ -150,35 +151,43 @@ interface NavGroup {
 })
 export class SettingsSidebarComponent implements OnInit {
   router = inject(Router);
+  authService = inject(AuthService);
   activeRoute = '/settings/profile';
 
-  groups: NavGroup[] = [
-    {
-      label: 'Account',
-      items: [
-        { label: 'Profile', route: '/settings/profile', icon: 'ti-user' },
-        { label: 'Security', route: '/settings/security', icon: 'ti-shield-lock' },
-        { label: 'Notifications', route: '/settings/notifications', icon: 'ti-bell' },
-        { label: 'Appearance', route: '/settings/appearance', icon: 'ti-palette' }
-      ]
-    },
-    {
-      label: 'Workspace',
-      items: [
-        { label: 'General', route: '/settings/general', icon: 'ti-settings' },
-        { label: 'Team Members', route: '/settings/team', icon: 'ti-users' },
-        { label: 'Roles & Permissions', route: '/settings/roles', icon: 'ti-lock-access' },
-        { label: 'Project Categories', route: '/settings/categories', icon: 'ti-tag' },
-        { label: 'SheetLoad Access', route: '/settings/sheetload', icon: 'ti-table-import' }
-      ]
-    },
-    {
-      label: 'Danger',
-      items: [
-        { label: 'Danger Zone', route: '/settings/danger', icon: 'ti-alert-triangle', danger: true }
-      ]
-    }
-  ];
+  groups = computed<NavGroup[]>(() => {
+    const user = this.authService.currentUser();
+    const hasWorkspaceAccess = user && (user.role === 'MANAGER' || user.role === 'TEAM_LEAD');
+    
+    return [
+      {
+        label: 'Account',
+        items: [
+          { label: 'Profile', route: '/settings/profile', icon: 'ti-user' },
+          { label: 'Security', route: '/settings/security', icon: 'ti-shield-lock' },
+          { label: 'Notifications', route: '/settings/notifications', icon: 'ti-bell' },
+          { label: 'Appearance', route: '/settings/appearance', icon: 'ti-palette' }
+        ]
+      },
+      ...(hasWorkspaceAccess ? [
+        {
+          label: 'Workspace',
+          items: [
+            { label: 'General', route: '/settings/general', icon: 'ti-settings' },
+            { label: 'Team Members', route: '/settings/team', icon: 'ti-users' },
+            { label: 'Roles & Permissions', route: '/settings/roles', icon: 'ti-lock-access' },
+            { label: 'Project Categories', route: '/settings/categories', icon: 'ti-tag' },
+            { label: 'SheetLoad Access', route: '/settings/sheetload', icon: 'ti-table-import' }
+          ]
+        },
+        {
+          label: 'Danger',
+          items: [
+            { label: 'Danger Zone', route: '/settings/danger', icon: 'ti-alert-triangle', danger: true }
+          ]
+        }
+      ] : [])
+    ];
+  });
 
   ngOnInit(): void {
     this.activeRoute = this.router.url;

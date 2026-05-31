@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
+import { workspaceSettingsGuard } from './core/guards/workspace-settings.guard';
 import { ShellComponent } from './layout/shell/shell.component';
 
 export const routes: Routes = [
@@ -49,12 +50,12 @@ export const routes: Routes = [
           { path: 'security', loadComponent: () => import('./features/settings/security/security-settings.component').then(m => m.SecuritySettingsComponent) },
           { path: 'notifications', loadComponent: () => import('./features/settings/notifications/notifications-settings.component').then(m => m.NotificationsSettingsComponent) },
           { path: 'appearance', loadComponent: () => import('./features/settings/appearance/appearance-settings.component').then(m => m.AppearanceSettingsComponent) },
-          { path: 'general', loadComponent: () => import('./features/settings/general/general-settings.component').then(m => m.GeneralSettingsComponent) },
-          { path: 'team', loadComponent: () => import('./features/settings/team/team-settings.component').then(m => m.TeamSettingsComponent) },
-          { path: 'roles', loadComponent: () => import('./features/settings/roles/roles-settings.component').then(m => m.RolesSettingsComponent) },
-          { path: 'categories', loadComponent: () => import('./features/settings/categories/categories-settings.component').then(m => m.CategoriesSettingsComponent) },
-          { path: 'sheetload', loadComponent: () => import('./features/settings/sheetload/sheetload-access.component').then(m => m.SheetloadAccessComponent) },
-          { path: 'danger', loadComponent: () => import('./features/settings/danger/danger-zone.component').then(m => m.DangerZoneComponent) }
+          { path: 'general', canActivate: [workspaceSettingsGuard], loadComponent: () => import('./features/settings/general/general-settings.component').then(m => m.GeneralSettingsComponent) },
+          { path: 'team', canActivate: [workspaceSettingsGuard], loadComponent: () => import('./features/settings/team/team-settings.component').then(m => m.TeamSettingsComponent) },
+          { path: 'roles', canActivate: [workspaceSettingsGuard], loadComponent: () => import('./features/settings/roles/roles-settings.component').then(m => m.RolesSettingsComponent) },
+          { path: 'categories', canActivate: [workspaceSettingsGuard], loadComponent: () => import('./features/settings/categories/categories-settings.component').then(m => m.CategoriesSettingsComponent) },
+          { path: 'sheetload', canActivate: [workspaceSettingsGuard], loadComponent: () => import('./features/settings/sheetload/sheetload-access.component').then(m => m.SheetloadAccessComponent) },
+          { path: 'danger', canActivate: [workspaceSettingsGuard], loadComponent: () => import('./features/settings/danger/danger-zone.component').then(m => m.DangerZoneComponent) }
         ]
       },
       {
