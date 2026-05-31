@@ -18,15 +18,7 @@
         class="member-card">
         
         <div class="member-header">
-          <div class="avatar-ring-container">
-            <svg class="progress-ring" width="58" height="58">
-              <circle class="progress-ring__circle-bg" stroke="rgba(255,255,255,0.03)" stroke-width="2" fill="transparent" r="26" cx="29" cy="29"/>
-              <circle class="progress-ring__circle" stroke="var(--accent)" stroke-width="2" fill="transparent" r="26" cx="29" cy="29"
-                      stroke-dasharray="163.3"
-                      [style.strokeDashoffset]="163.3 - (m.productivityScore / 100) * 163.3"/>
-            </svg>
-            <app-avatar [name]="m.name" [src]="m.avatar" size="lg"></app-avatar>
-          </div>
+          <app-avatar [name]="m.name" [src]="m.avatar" size="lg"></app-avatar>
           <div class="meta">
             <h3>{{ m.name }}</h3>
             <span class="email">{{ m.email }}</span>
@@ -35,9 +27,6 @@
 
         <div class="member-role-row">
           <app-badge [label]="m.role" type="status"></app-badge>
-          <div class="score" title="Productivity Score based on tasks and story points completed.">
-            <span>Score:</span> <strong>{{ m.productivityScore }}</strong>
-          </div>
         </div>
 
         <div class="member-stats-row">
@@ -69,23 +58,10 @@
       <div class="profile-sidebar">
         <div class="sidebar-card">
           <div class="profile-header-details">
-            <div class="avatar-ring-container-xl">
-              <svg class="progress-ring" width="88" height="88">
-                <circle class="progress-ring__circle-bg" stroke="rgba(255,255,255,0.03)" stroke-width="2" fill="transparent" r="40" cx="44" cy="44"/>
-                <circle class="progress-ring__circle" stroke="var(--accent)" stroke-width="2" fill="transparent" r="40" cx="44" cy="44"
-                        stroke-dasharray="251.3"
-                        [style.strokeDashoffset]="251.3 - (selectedMember.productivityScore / 100) * 251.3"/>
-              </svg>
-              <app-avatar [name]="selectedMember.name" [src]="selectedMember.avatar" size="xl"></app-avatar>
-            </div>
+            <app-avatar [name]="selectedMember.name" [src]="selectedMember.avatar" size="xl"></app-avatar>
             <h2>{{ selectedMember.name }}</h2>
             <span class="email">{{ selectedMember.email }}</span>
             <app-badge [label]="selectedMember.role" type="status" style="margin-top: 8px; display: inline-block;"></app-badge>
-          </div>
-
-          <div class="prod-score-card">
-            <span class="lbl">Productivity Score</span>
-            <span class="score-val">{{ selectedMember.productivityScore }}</span>
           </div>
 
           <div class="sidebar-stats">

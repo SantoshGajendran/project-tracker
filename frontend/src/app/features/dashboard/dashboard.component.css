@@ -135,15 +135,9 @@
 
 .bottom-grid {
   display: grid;
-  grid-template-columns: 3fr 2fr;
+  grid-template-columns: 1fr;
   gap: var(--space-md);
   margin-bottom: var(--space-lg);
-}
-
-@media (max-width: 1024px) {
-  .bottom-grid {
-    grid-template-columns: 1fr;
-  }
 }
 
 .bottom-card {

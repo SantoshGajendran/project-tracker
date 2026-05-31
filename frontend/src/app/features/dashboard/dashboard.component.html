@@ -81,45 +81,6 @@
 
     <!-- Tables/Feeds Row -->
     <div class="bottom-grid">
-      <!-- Project Health -->
-      <div class="bottom-card">
-        <h3>Project Health Status</h3>
-        <div class="health-table-wrapper">
-          <table *ngIf="health.length > 0" class="health-table">
-            <thead>
-              <tr>
-                <th>Project Name</th>
-                <th>Priority</th>
-                <th>Status</th>
-                <th>Progress</th>
-                <th>Due In</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let p of health">
-                <td class="proj-name">
-                  <div class="name-cell">
-                    {{ p.name }}
-                    <span *ngIf="p.riskFlag" class="risk-badge">AT RISK</span>
-                  </div>
-                </td>
-                <td><app-badge [label]="p.priority" type="priority"></app-badge></td>
-                <td><app-badge [label]="p.status" type="status"></app-badge></td>
-                <td style="width: 120px;">
-                  <app-progress-bar [value]="p.progress" [showLabel]="true"></app-progress-bar>
-                </td>
-                <td class="days-cell" [ngClass]="{'overdue': p.daysRemaining < 0, 'imminent': p.daysRemaining >= 0 && p.daysRemaining < 7}">
-                  {{ p.daysRemaining >= 0 ? p.daysRemaining + 'd' : 'Overdue' }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <div *ngIf="health.length === 0" class="empty-embed">
-            <p>No active projects tracked.</p>
-          </div>
-        </div>
-      </div>
-
       <!-- Activity Feed -->
       <div class="bottom-card">
         <h3>Recent Activities</h3>

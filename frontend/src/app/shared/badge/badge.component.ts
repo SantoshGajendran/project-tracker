@@ -29,9 +29,10 @@ export class BadgeComponent {
     if (val === 'COMPLETED' || val === 'DONE') return 'done';
     if (val === 'IN_PROGRESS' || val === 'IN_REVIEW' || val === 'ACTIVE') return 'active';
     if (val === 'ON_HOLD' || val === 'WARNING') return 'warning';
-    if (val === 'CANCELLED' || val === 'DONE' || val === 'LOW') return 'done';
+    if (val === 'CANCELLED' || val === 'LOW') return 'done';
     if (val === 'HIGH' || val === 'CRITICAL' || val === 'DANGER') return 'danger';
-    if (val === 'PLANNING' || val === 'PLANNED') return 'planning';
+    if (val === 'PLANNING' || val === 'PLANNED' || val === 'TODO') return 'planning';
+    if (val === 'MEDIUM') return 'warning';
     
     return val.toLowerCase();
   }
