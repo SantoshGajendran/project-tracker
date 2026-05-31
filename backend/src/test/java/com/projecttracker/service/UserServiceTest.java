@@ -9,6 +9,7 @@ import com.projecttracker.entity.UserRole;
 import com.projecttracker.repository.ProjectMemberRepository;
 import com.projecttracker.repository.TaskRepository;
 import com.projecttracker.repository.UserRepository;
+import com.projecttracker.repository.ProjectRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,6 +38,9 @@ public class UserServiceTest {
 
     @Mock
     private ProjectMemberRepository projectMemberRepository;
+
+    @Mock
+    private ProjectRepository projectRepository;
 
     @InjectMocks
     private UserService userService;

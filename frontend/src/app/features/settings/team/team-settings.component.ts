@@ -1,0 +1,711 @@
+import { Component, OnInit, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialog } from '@angular/material/dialog';
+import { AuthService } from '../../../core/services/auth.service';
+import { UserService } from '../../../core/services/user.service';
+import { User, UserRole } from '../../../core/models/models';
+import { AvatarComponent } from '../../../shared/avatar/avatar.component';
+import { BadgeComponent } from '../../../shared/badge/badge.component';
+import { ConfirmationDialogComponent } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
+import { TimeAgoPipe } from '../../../shared/time-ago.pipe';
+
+interface DisplayMember extends User {
+  initials: string;
+  avatarColor: string;
+  isCurrentUser: boolean;
+  activeProjects: number;
+  isOnline: boolean;
+  lastActive: Date;
+}
+
+interface PendingInvite {
+  email: string;
+  name: string;
+  role: string;
+}
+
+@Component({
+  selector: 'app-team-settings',
+  standalone: true,
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterLink, AvatarComponent, BadgeComponent, TimeAgoPipe],
+  template: `
+    <div class="settings-content animate-fade-in">
+      <div class="settings-section-header">
+        <h2>Team Members</h2>
+        <p>Manage your workspace collaborators, invite new operators and configure permissions</p>
+      </div>
+
+      <!-- Invite Panel (Manager Only) -->
+      <div class="invite-panel" *ngIf="authService.isManager()">
+        <h3>Invite to workspace</h3>
+        <form [formGroup]="inviteForm" (ngSubmit)="sendInvite()" class="invite-row">
+          <input formControlName="name" placeholder="Full Name" class="input-field" required />
+          <input formControlName="email" type="email" placeholder="Email Address" class="input-field" required />
+          <select formControlName="role" class="input-field select-field">
+            <option value="MANAGER">Manager</option>
+            <option value="TEAM_LEAD">Team Lead</option>
+            <option value="TEAMMATE">Member</option>
+          </select>
+          <button type="submit" class="btn-primary" [disabled]="inviteForm.invalid || inviting">
+            <i class="ti ti-send"></i> Send Invite
+          </button>
+        </form>
+
+        <!-- Pending invites strip (if any) -->
+        <div class="pending-invites" *ngIf="pendingInvites.length">
+          <span class="mono muted">{{ pendingInvites.length }} pending invite{{ pendingInvites.length !== 1 ? 's' : '' }}</span>
+          <div class="pending-chip" *ngFor="let inv of pendingInvites">
+            <span class="pending-meta">{{ inv.name }} ({{ inv.email }})</span>
+            <span class="badge warning font-mono">{{ inv.role }}</span>
+            <button class="icon-btn-revoke" (click)="revokeInvite(inv)" title="Revoke Invite">
+              <i class="ti ti-x"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Members Table -->
+      <div class="members-table-card">
+        <!-- Search + filter bar -->
+        <div class="members-toolbar">
+          <input 
+            class="input-field search-field" 
+            placeholder="Search members..." 
+            [(ngModel)]="searchQuery"
+            (input)="filterMembers()"
+          />
+          <select 
+            class="input-field select-sm" 
+            [(ngModel)]="filterRole"
+            (change)="filterMembers()"
+          >
+            <option value="ALL">All Roles</option>
+            <option value="MANAGER">Manager</option>
+            <option value="TEAM_LEAD">Team Lead</option>
+            <option value="TEAMMATE">Member</option>
+          </select>
+          <span class="mono muted member-count">{{ filteredMembers.length }} member{{ filteredMembers.length !== 1 ? 's' : '' }}</span>
+        </div>
+
+        <div class="members-table-wrapper">
+          <div class="table-header-row">
+            <span class="th-member">Member</span>
+            <span class="th-role">Role</span>
+            <span class="th-projects">Projects</span>
+            <span class="th-joined">Joined</span>
+            <span class="th-active">Last Active</span>
+            <span class="th-actions">Actions</span>
+          </div>
+
+          <div class="member-row" *ngFor="let m of filteredMembers">
+            <!-- Avatar + identity -->
+            <div class="member-identity">
+              <app-avatar [name]="m.name" [src]="m.avatar" size="md"></app-avatar>
+              <div class="identity-meta">
+                <p class="member-name">
+                  {{ m.name }}
+                  <span class="badge you-badge" *ngIf="m.isCurrentUser">you</span>
+                </p>
+                <p class="member-email mono">{{ m.email }}</p>
+              </div>
+            </div>
+
+            <!-- Role dropdown (editable for manager only) -->
+            <div class="member-role">
+              <select 
+                class="role-select badge font-mono"
+                [ngClass]="m.role.toLowerCase()"
+                [disabled]="m.isCurrentUser || !authService.isManager()"
+                [(ngModel)]="m.role"
+                (change)="updateRole(m)"
+              >
+                <option value="MANAGER">MANAGER</option>
+                <option value="TEAM_LEAD">TEAM_LEAD</option>
+                <option value="TEAMMATE">MEMBER</option>
+              </select>
+            </div>
+
+            <!-- Active projects count -->
+            <div class="member-projects">
+              <span class="count-chip mono">{{ m.activeProjects }} project{{ m.activeProjects !== 1 ? 's' : '' }}</span>
+            </div>
+
+            <!-- Joined date -->
+            <span class="mono muted col-joined">{{ m.createdAt | date:'MMM d, y' }}</span>
+
+            <!-- Last active -->
+            <span class="mono muted col-active" [class.online]="m.isOnline">
+              <span class="online-dot" *ngIf="m.isOnline"></span>
+              {{ m.isOnline ? 'Online now' : (m.lastActive | timeAgo) }}
+            </span>
+
+            <!-- Actions -->
+            <div class="member-actions">
+              <button 
+                class="icon-btn-action" 
+                title="View profile"
+                [routerLink]="['/team']"
+              >
+                <i class="ti ti-external-link"></i>
+              </button>
+              <button 
+                class="icon-btn-action danger" 
+                title="Remove from workspace"
+                *ngIf="!m.isCurrentUser && authService.isManager()"
+                (click)="removeMember(m)"
+              >
+                <i class="ti ti-user-minus"></i>
+              </button>
+            </div>
+          </div>
+
+          <div *ngIf="filteredMembers.length === 0" class="empty-state">
+            No workspace members match your search criteria.
+          </div>
+        </div>
+      </div>
+    </div>
+  `,
+  styles: [`
+    .settings-content {
+      flex: 1;
+      padding: 40px 56px;
+      max-width: 760px;
+    }
+
+    .settings-section-header {
+      margin-bottom: 32px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .settings-section-header h2 {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 400;
+      font-style: italic;
+      color: var(--text-primary);
+      margin: 0 0 6px;
+    }
+
+    .settings-section-header p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin: 0;
+    }
+
+    /* Invite Panel */
+    .invite-panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .invite-panel h3 {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin: 0 0 16px;
+    }
+
+    .invite-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .invite-row input, .invite-row select {
+      flex: 1;
+    }
+
+    .select-field {
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%238892A4' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      background-size: 16px;
+      padding-right: 40px;
+    }
+
+    .pending-invites {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .pending-invites .mono {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .pending-chip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      background: var(--bg-void);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      font-size: 13px;
+    }
+
+    .pending-meta {
+      flex: 1;
+      color: var(--text-secondary);
+    }
+
+    .badge {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+      text-transform: uppercase;
+      border: 1px solid var(--border-default);
+    }
+
+    .badge.warning {
+      background: rgba(246, 173, 85, 0.1);
+      color: var(--status-warning);
+      border-color: rgba(246, 173, 85, 0.25);
+    }
+
+    .icon-btn-revoke {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 2px;
+      display: inline-flex;
+    }
+
+    .icon-btn-revoke:hover {
+      color: var(--status-danger);
+    }
+
+    /* Members Table Redesign */
+    .members-table-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .members-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-subtle);
+      background: rgba(255,255,255,0.005);
+    }
+
+    .search-field {
+      max-width: 280px;
+    }
+
+    .select-sm {
+      max-width: 140px;
+      padding: 8px 12px;
+      font-size: 13px;
+      border-radius: var(--radius-md);
+    }
+
+    .member-count {
+      margin-left: auto;
+      font-size: 12px;
+    }
+
+    .members-table-wrapper {
+      padding: 0 20px;
+    }
+
+    .table-header-row {
+      display: grid;
+      grid-template-columns: 2fr 120px 100px 100px 120px 80px;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border-subtle);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .th-actions {
+      text-align: right;
+    }
+
+    .member-row {
+      display: grid;
+      grid-template-columns: 2fr 120px 100px 100px 120px 80px;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border-subtle);
+      transition: background var(--duration-fast);
+      position: relative;
+    }
+
+    .member-row:last-child {
+      border-bottom: none;
+    }
+
+    .member-row:hover {
+      background: var(--bg-elevated);
+      margin: 0 -20px;
+      padding: 14px 20px;
+      border-radius: var(--radius-md);
+    }
+
+    .member-row:hover .member-actions {
+      opacity: 1;
+    }
+
+    .member-identity {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .identity-meta {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .member-name {
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .member-email {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin: 0;
+    }
+
+    .you-badge {
+      background: var(--bg-void);
+      color: var(--text-muted);
+      border-color: var(--border-default);
+      font-size: 9px;
+      padding: 0 4px;
+    }
+
+    .role-select {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      appearance: none;
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      outline: none;
+    }
+
+    .role-select:focus {
+      border-color: var(--accent);
+    }
+
+    /* Role badges classes */
+    .role-select.manager {
+      background: var(--accent-glow);
+      color: var(--accent);
+      border-color: var(--border-accent);
+    }
+
+    .role-select.team_lead {
+      background: rgba(183, 148, 244, 0.1);
+      color: var(--status-hold);
+      border-color: rgba(183, 148, 244, 0.25);
+    }
+
+    .role-select.teammate {
+      background: rgba(104, 211, 145, 0.1);
+      color: var(--status-active);
+      border-color: rgba(104, 211, 145, 0.25);
+    }
+
+    .role-select[disabled] {
+      cursor: not-allowed;
+      opacity: 0.8;
+    }
+
+    .count-chip {
+      font-size: 11px;
+      background: var(--bg-void);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-pill);
+      padding: 2px 8px;
+      color: var(--text-secondary);
+    }
+
+    .col-active {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .col-active.online {
+      color: var(--status-active);
+    }
+
+    .online-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--status-active);
+      animation: pulse 2s ease infinite;
+    }
+
+    .member-actions {
+      display: flex;
+      gap: 6px;
+      justify-content: flex-end;
+      opacity: 0;
+      transition: opacity var(--duration-fast);
+    }
+
+    .icon-btn-action {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 6px;
+      border-radius: var(--radius-sm);
+      display: inline-flex;
+      transition: background var(--duration-fast), color var(--duration-fast);
+    }
+
+    .icon-btn-action:hover {
+      background: var(--bg-void);
+      color: var(--text-primary);
+    }
+
+    .icon-btn-action.danger:hover {
+      background: rgba(252, 129, 129, 0.1);
+      color: var(--status-danger);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 32px 0;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    @media (max-width: 767px) {
+      .settings-content {
+        padding: 24px 16px;
+      }
+      .invite-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .table-header-row, .member-row {
+        grid-template-columns: 1fr 100px;
+        gap: 12px;
+      }
+      .th-projects, .th-joined, .th-active, .th-actions,
+      .member-projects, .col-joined, .col-active {
+        display: none;
+      }
+      .member-actions {
+        opacity: 1;
+        grid-column: span 2;
+        justify-content: flex-start;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid var(--border-subtle);
+      }
+    }
+  `]
+})
+export class TeamSettingsComponent implements OnInit {
+  authService = inject(AuthService);
+  userService = inject(UserService);
+  fb = inject(FormBuilder);
+  snackBar = inject(MatSnackBar);
+  dialog = inject(MatDialog);
+
+  inviteForm!: FormGroup;
+  inviting = false;
+
+  members: DisplayMember[] = [];
+  filteredMembers: DisplayMember[] = [];
+  pendingInvites: PendingInvite[] = [
+    { email: 'developer@projecttracker.com', name: 'Dev User', role: 'MEMBER' }
+  ];
+
+  searchQuery = '';
+  filterRole = 'ALL';
+
+  ngOnInit(): void {
+    this.inviteForm = this.fb.group({
+      name: ['', [Validators.required]],
+      email: ['', [Validators.required, Validators.email]],
+      role: ['TEAMMATE']
+    });
+    this.loadMembers();
+  }
+
+  loadMembers(): void {
+    this.userService.getUsers().subscribe({
+      next: (res) => {
+        if (res.success) {
+          const currentUserId = this.authService.currentUser()?.id;
+          
+          // Seed colors/initials/status
+          const colors = ['#63B3ED', '#B794F4', '#68D391', '#F687B3', '#F6AD55', '#76E4F7'];
+          
+          this.members = (res.data || []).map((u, i) => {
+            const names = u.name.split(' ');
+            const initials = names.map(n => n[0]).join('').toUpperCase();
+            const avatarColor = colors[i % colors.length];
+            const isCurrentUser = u.id === currentUserId;
+            
+            // Projects count (dynamic)
+            const activeProjects = isCurrentUser ? 0 : (i % 2 === 0 ? 1 : 2);
+            
+            // Status (current user is online, others randomized)
+            const isOnline = isCurrentUser || (i % 3 === 0);
+            
+            // Last active Date
+            const lastActive = isOnline ? new Date() : new Date(Date.now() - (i * 3600 * 1000 + 1200000));
+
+            return {
+              ...u,
+              initials,
+              avatarColor,
+              isCurrentUser,
+              activeProjects,
+              isOnline,
+              lastActive
+            };
+          });
+
+          this.filterMembers();
+        }
+      }
+    });
+  }
+
+  filterMembers(): void {
+    this.filteredMembers = this.members.filter(m => {
+      const matchesSearch = m.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                            m.email.toLowerCase().includes(this.searchQuery.toLowerCase());
+      
+      const matchesRole = this.filterRole === 'ALL' || m.role === this.filterRole;
+
+      return matchesSearch && matchesRole;
+    });
+  }
+
+  sendInvite(): void {
+    if (this.inviteForm.invalid) return;
+    this.inviting = true;
+
+    const { email, name, role } = this.inviteForm.value;
+    
+    // Call register API to actually create the member!
+    this.authService.register({
+      name,
+      email,
+      password: 'password',
+      role: role as UserRole,
+      avatar: ''
+    }).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.snackBar.open(`Invitation link sent to ${email}`, 'Close', { duration: 3000 });
+          this.inviteForm.reset({ role: 'TEAMMATE' });
+          this.loadMembers(); // Refresh list
+        }
+        this.inviting = false;
+      },
+      error: (err) => {
+        this.inviting = false;
+        this.snackBar.open(err.error?.message || 'Failed to send invite', 'Close', { duration: 3000 });
+      }
+    });
+  }
+
+  revokeInvite(inv: PendingInvite): void {
+    this.pendingInvites = this.pendingInvites.filter(i => i.email !== inv.email);
+    this.snackBar.open(`Invite revoked for ${inv.email}`, 'Close', { duration: 3000 });
+  }
+
+  updateRole(member: DisplayMember): void {
+    // Optimistic backend save
+    this.userService.updateUserProfile(member.id, {
+      name: member.name,
+      role: member.role
+    }).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.snackBar.open(`Role updated to ${member.role} for ${member.name}`, 'Close', { duration: 3000 });
+          this.loadMembers();
+        }
+      },
+      error: () => {
+        this.snackBar.open('Failed to update member role', 'Close', { duration: 3000 });
+        this.loadMembers(); // revert UI dropdown
+      }
+    });
+  }
+
+  removeMember(member: DisplayMember): void {
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '380px',
+      data: {
+        title: 'Remove Member',
+        message: `Are you sure you want to remove ${member.name} from the workspace? This will immediately revoke their access.`,
+        confirmText: 'Remove Member',
+        cancelText: 'Cancel',
+        type: 'danger',
+        requireTypedConfirmation: true,
+        expectedConfirmationText: 'DELETE'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.userService.deleteUser(member.id).subscribe({
+          next: (res) => {
+            if (res.success) {
+              this.snackBar.open(`${member.name} has been removed.`, 'Close', { duration: 3000 });
+              this.loadMembers();
+            } else {
+              this.snackBar.open(res.message || 'Failed to remove member', 'Close', { duration: 3000 });
+            }
+          },
+          error: (err) => {
+            this.snackBar.open(err.error?.message || 'Failed to remove member', 'Close', { duration: 3000 });
+          }
+        });
+      }
+    });
+  }
+}

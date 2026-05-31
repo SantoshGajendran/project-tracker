@@ -1,5 +1,6 @@
 import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -10,12 +11,14 @@ export interface ConfirmationDialogData {
   confirmText?: string;
   cancelText?: string;
   type?: 'danger' | 'warning' | 'info';
+  requireTypedConfirmation?: boolean;
+  expectedConfirmationText?: string;
 }
 
 @Component({
   selector: 'app-confirmation-dialog',
   standalone: true,
-  imports: [CommonModule, MatDialogModule, MatButtonModule, MatIconModule],
+  imports: [CommonModule, FormsModule, MatDialogModule, MatButtonModule, MatIconModule],
   template: `
     <div class="confirm-container">
       <div class="confirm-header">
@@ -27,11 +30,30 @@ export interface ConfirmationDialogData {
       
       <div class="confirm-body">
         <p>{{ data.message }}</p>
+        
+        <div *ngIf="data.requireTypedConfirmation" class="typed-confirm-field" style="margin-top: var(--space-md);">
+          <p style="font-size: 11px; font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">
+            Type "{{ data.expectedConfirmationText || 'DELETE' }}" to confirm:
+          </p>
+          <input 
+            type="text" 
+            class="input-field" 
+            placeholder="Type confirmation here..."
+            [(ngModel)]="userInput"
+            (keyup.enter)="isConfirmEnabled() && onConfirm()"
+            style="width: 100%;"
+          />
+        </div>
       </div>
       
       <div class="confirm-actions">
         <button class="btn-secondary" (click)="onCancel()">{{ data.cancelText || 'Cancel' }}</button>
-        <button class="btn-primary-action" [ngClass]="data.type || 'danger'" (click)="onConfirm()">{{ data.confirmText || 'Confirm' }}</button>
+        <button 
+          class="btn-primary-action" 
+          [ngClass]="data.type || 'danger'" 
+          [disabled]="data.requireTypedConfirmation && !isConfirmEnabled()"
+          (click)="onConfirm()"
+        >{{ data.confirmText || 'Confirm' }}</button>
       </div>
     </div>
   `,
@@ -119,6 +141,12 @@ export interface ConfirmationDialogData {
       transition: all var(--duration-fast) var(--ease-in-out);
     }
     
+    button[disabled] {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none !important;
+    }
+    
     .btn-secondary {
       background: transparent;
       color: var(--text-secondary);
@@ -138,7 +166,7 @@ export interface ConfirmationDialogData {
     .btn-primary-action.danger {
       background: var(--status-danger);
     }
-    .btn-primary-action.danger:hover {
+    .btn-primary-action.danger:hover:not([disabled]) {
       opacity: 0.9;
       box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
     }
@@ -146,7 +174,7 @@ export interface ConfirmationDialogData {
     .btn-primary-action.warning {
       background: var(--status-warning);
     }
-    .btn-primary-action.warning:hover {
+    .btn-primary-action.warning:hover:not([disabled]) {
       opacity: 0.9;
       box-shadow: 0 4px 12px rgba(217, 119, 6, 0.2);
     }
@@ -154,13 +182,31 @@ export interface ConfirmationDialogData {
     .btn-primary-action.info {
       background: var(--accent);
     }
-    .btn-primary-action.info:hover {
+    .btn-primary-action.info:hover:not([disabled]) {
       opacity: 0.9;
       box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    }
+
+    .input-field {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 14px;
+      padding: 10px 14px;
+      transition: border-color var(--duration-fast), box-shadow var(--duration-fast);
+      outline: none;
+    }
+    .input-field:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
     }
   `]
 })
 export class ConfirmationDialogComponent {
+  userInput: string = '';
+
   constructor(
     public dialogRef: MatDialogRef<ConfirmationDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: ConfirmationDialogData
@@ -172,11 +218,19 @@ export class ConfirmationDialogComponent {
     return 'report_problem';
   }
 
+  isConfirmEnabled(): boolean {
+    const expected = this.data.expectedConfirmationText || 'DELETE';
+    return this.userInput.trim() === expected;
+  }
+
   onCancel(): void {
     this.dialogRef.close(false);
   }
 
   onConfirm(): void {
+    if (this.data.requireTypedConfirmation && !this.isConfirmEnabled()) {
+      return;
+    }
     this.dialogRef.close(true);
   }
 }

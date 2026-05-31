@@ -8,11 +8,14 @@ import com.projecttracker.entity.ProjectStatus;
 import com.projecttracker.entity.Task;
 import com.projecttracker.entity.TaskStatus;
 import com.projecttracker.entity.User;
+import com.projecttracker.entity.UserRole;
+import com.projecttracker.entity.Project;
 import com.projecttracker.exception.ResourceNotFoundException;
 import com.projecttracker.mapper.UserMapper;
 import com.projecttracker.repository.ProjectMemberRepository;
 import com.projecttracker.repository.TaskRepository;
 import com.projecttracker.repository.UserRepository;
+import com.projecttracker.repository.ProjectRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -30,6 +33,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final TaskRepository taskRepository;
     private final ProjectMemberRepository projectMemberRepository;
+    private final ProjectRepository projectRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
 
@@ -37,6 +41,33 @@ public class UserService {
         return userRepository.findAll().stream()
                 .map(userMapper::toDto)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void deleteUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+
+        // Reassign projects created by this user
+        List<Project> createdProjects = projectRepository.findByCreatedBy(user);
+        if (!createdProjects.isEmpty()) {
+            User fallbackUser = userRepository.findAll().stream()
+                    .filter(u -> u.getRole() == UserRole.MANAGER && !u.getId().equals(id))
+                    .findFirst()
+                    .orElseGet(() -> userRepository.findAll().stream()
+                            .filter(u -> !u.getId().equals(id))
+                            .findFirst()
+                            .orElse(null));
+
+            if (fallbackUser != null) {
+                for (Project project : createdProjects) {
+                    project.setCreatedBy(fallbackUser);
+                }
+                projectRepository.saveAll(createdProjects);
+            }
+        }
+
+        userRepository.delete(user);
     }
 
     public UserDto getUserById(Long id) {
@@ -52,6 +83,9 @@ public class UserService {
         
         user.setName(userDto.getName());
         user.setAvatar(userDto.getAvatar());
+        if (userDto.getRole() != null) {
+            user.setRole(userDto.getRole());
+        }
         
         User savedUser = userRepository.save(user);
         return userMapper.toDto(savedUser);

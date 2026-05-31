@@ -27,4 +27,8 @@ export class UserService {
   updateUserProfile(id: number, profile: Partial<User>): Observable<ApiResponse<User>> {
     return this.http.put<ApiResponse<User>>(`${this.apiUrl}/${id}`, profile);
   }
+
+  deleteUser(id: number): Observable<ApiResponse<void>> {
+    return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/${id}`);
+  }
 }
