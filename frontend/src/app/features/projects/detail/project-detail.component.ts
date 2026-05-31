@@ -11,7 +11,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDialogModule, MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { DragDropModule, CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
+import { DragDropModule, CdkDragDrop, CdkDragStart, CdkDragRelease, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { ProjectService } from '../../../core/services/project.service';
@@ -25,6 +25,8 @@ import { ProgressBarComponent } from '../../../shared/progress-bar/progress-bar.
 import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 import { EmptyStateComponent } from '../../../shared/empty-state/empty-state.component';
 import { ConfirmationDialogComponent } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
+import { SpringPhysicsService } from '../../../core/services/spring-physics.service';
+import { SpringCardDirective } from '../../../shared/directives/spring-card.directive';
 
 @Component({
   selector: 'app-project-detail',
@@ -45,7 +47,8 @@ import { ConfirmationDialogComponent } from '../../../shared/confirmation-dialog
     BadgeComponent,
     ProgressBarComponent,
     AvatarComponent,
-    EmptyStateComponent
+    EmptyStateComponent,
+    SpringCardDirective
   ],
   templateUrl: './project-detail.component.html',
   styleUrls: ['./project-detail.component.css']
@@ -59,6 +62,7 @@ export class ProjectDetailComponent implements OnInit {
   authService = inject(AuthService);
   dialog = inject(MatDialog);
   snackBar = inject(MatSnackBar);
+  springService = inject(SpringPhysicsService);
 
   projectId!: number;
   detail?: ProjectDetail;
@@ -154,8 +158,11 @@ export class ProjectDetailComponent implements OnInit {
 
   // Board drag & drop status updater
   onTaskDropped(event: CdkDragDrop<Task[]>): void {
+    const el = event.item.element.nativeElement as HTMLElement;
+    
     if (event.previousContainer === event.container) {
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
+      this.animateCardEntrance(el);
     } else {
       const task = event.previousContainer.data[event.previousIndex];
       const targetStatus = event.container.id as TaskStatus;
@@ -167,6 +174,13 @@ export class ProjectDetailComponent implements OnInit {
         event.previousIndex,
         event.currentIndex
       );
+
+      // Trigger spring entrance animations
+      if (targetStatus === 'DONE') {
+        this.animateDoneEntrance(el);
+      } else {
+        this.animateCardEntrance(el);
+      }
 
       // Call API
       this.taskService.patchStatus(task.id, targetStatus).subscribe({
@@ -186,6 +200,43 @@ export class ProjectDetailComponent implements OnInit {
         }
       });
     }
+  }
+
+  onDragStarted(event: CdkDragStart): void {
+    const el = event.source.element.nativeElement as HTMLElement;
+    this.springService.animateMulti(el, {
+      '--card-scale':   { from: 1,    to: 0.96 },
+      '--card-rotate':  { from: 0,    to: 2.5    },
+      '--card-opacity': { from: 1,    to: 0.6  },
+    }, this.springService.CONFIGS.snappy);
+  }
+
+  onDragReleased(event: CdkDragRelease): void {
+    const el = event.source.element.nativeElement as HTMLElement;
+    this.springService.animateMulti(el, {
+      '--card-scale':   { from: 0.96, to: 1 },
+      '--card-rotate':  { from: 2.5,    to: 0 },
+      '--card-opacity': { from: 0.6,  to: 1 },
+    }, this.springService.CONFIGS.bouncy);
+  }
+
+  private animateCardEntrance(el: HTMLElement): void {
+    el.style.setProperty('--card-translate-y', '12');
+    el.style.setProperty('--card-opacity', '0');
+
+    this.springService.animate(el, '--card-translate-y', 12, 0, this.springService.CONFIGS.bouncy);
+    this.springService.animate(el, '--card-opacity', 0, 1, this.springService.CONFIGS.gentle);
+    this.springService.animate(el, '--card-scale', 0.95, 1, this.springService.CONFIGS.bouncy);
+  }
+
+  private animateDoneEntrance(el: HTMLElement): void {
+    this.springService.animate(el, '--card-scale', 0.9, 1.08, this.springService.CONFIGS.bouncy, () => {
+      this.springService.animate(el, '--card-scale', 1.08, 1, this.springService.CONFIGS.snappy);
+    });
+
+    this.springService.animate(el, '--done-glow', 0, 1, this.springService.CONFIGS.instant, () => {
+      this.springService.animate(el, '--done-glow', 1, 0, this.springService.CONFIGS.gentle);
+    });
   }
 
   updateProjectProgressLocally(): void {

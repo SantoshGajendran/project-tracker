@@ -153,10 +153,14 @@
               
               <mat-card 
                 *ngFor="let t of lane.tasks" 
-                cdkDrag 
+                cdkDrag
+                [cdkDragData]="t"
+                (cdkDragStarted)="onDragStarted($event)"
+                (cdkDragReleased)="onDragReleased($event)"
+                appSpringCard
                 [routerLink]="['/tasks']"
                 [queryParams]="{search: t.title}"
-                class="board-task-card glass-panel glass-card-hover">
+                class="board-task-card glass-panel">
                 
                 <div class="task-top">
                   <app-badge [label]="t.priority" type="priority"></app-badge>

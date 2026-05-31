@@ -373,9 +373,34 @@
 }
 
 .board-task-card {
+  /* Default values for every CSS custom property */
+  --card-scale:       1;
+  --card-rotate:      0;
+  --card-opacity:     1;
+  --card-translate-y: 0;
+  --card-lift:        0;
+  --done-glow:        0;
+
+  /* Apply them via transform / opacity / translate */
+  transform:
+    scale(var(--card-scale))
+    rotate(calc(var(--card-rotate) * 1deg))
+    translateY(calc(var(--card-translate-y) * 1px));
+  opacity:    var(--card-opacity);
+
+  /* Hover lift translation */
+  translate: 0 calc(var(--card-lift) * 1px);
+
+  /* Done-drop glow */
+  box-shadow:
+    0 calc(var(--done-glow) * 0px) calc(var(--done-glow) * 20px)
+    rgba(104, 211, 145, calc(var(--done-glow) * 0.35)),
+    0 2px 8px rgba(0, 0, 0, 0.1);
+
   padding: 16px;
   cursor: grab;
   text-decoration: none;
+  will-change: transform, opacity, translate, box-shadow; /* GPU hint */
 }
 
 .board-task-card:active {
