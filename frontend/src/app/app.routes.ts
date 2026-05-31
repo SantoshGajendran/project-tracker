@@ -8,6 +8,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/login.component').then(m => m.LoginComponent)
   },
   {
+    path: 'oauth2/redirect',
+    loadComponent: () => import('./features/auth/oauth2-redirect.component').then(m => m.OAuth2RedirectComponent)
+  },
+  {
     path: '',
     component: ShellComponent,
     canActivate: [authGuard],

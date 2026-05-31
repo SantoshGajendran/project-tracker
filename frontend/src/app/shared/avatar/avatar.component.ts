@@ -8,9 +8,10 @@ import { CommonModule } from '@angular/common';
   template: `
     <div 
       [ngClass]="'avatar ' + size" 
-      [ngStyle]="{'background-color': getBgColor()}"
+      [ngStyle]="{'background-color': src && !imgFailed ? 'transparent' : getBgColor()}"
       [title]="name">
-      <span>{{ getInitials() }}</span>
+      <img *ngIf="src && !imgFailed" [src]="src" (error)="onImgError()" alt="" class="avatar-img" />
+      <span *ngIf="!src || imgFailed">{{ getInitials() }}</span>
     </div>
   `,
   styles: [`
@@ -26,6 +27,12 @@ import { CommonModule } from '@angular/common';
       color: #FFFFFF;
       overflow: hidden;
       user-select: none;
+    }
+    .avatar-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
     }
     .sm { width: 24px; height: 24px; font-size: 9px; }
     .md { width: 32px; height: 32px; font-size: 12px; }

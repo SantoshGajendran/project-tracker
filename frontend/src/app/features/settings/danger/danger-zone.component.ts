@@ -191,7 +191,7 @@ export class DangerZoneComponent {
     // Call endpoint or simulate file download
     setTimeout(() => {
       const mockData = {
-        workspace: 'Project Tracker',
+        workspace: 'ProjectFlow',
         exportedAt: new Date().toISOString(),
         projects: [],
         tasks: []

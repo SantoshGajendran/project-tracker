@@ -24,13 +24,13 @@ import { MatSnackBar } from '@angular/material/snack-bar';
           <div class="form-grid-2">
             <div class="form-group-custom">
               <label class="form-label-custom">Workspace Name*</label>
-              <input type="text" formControlName="workspaceName" class="input-field" placeholder="e.g. Project Tracker" required />
+              <input type="text" formControlName="workspaceName" class="input-field" placeholder="e.g. ProjectFlow" required />
             </div>
 
             <div class="form-group-custom">
               <label class="form-label-custom">Workspace Slug*</label>
               <div class="slug-input-wrapper">
-                <span class="slug-prefix font-mono">tracker.com/</span>
+                <span class="slug-prefix font-mono">projectflow.com/</span>
                 <input type="text" formControlName="workspaceSlug" class="input-field slug-input" placeholder="e.g. workspace-name" required />
               </div>
             </div>
@@ -44,7 +44,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
           <div class="form-grid-2">
             <div class="form-group-custom">
               <label class="form-label-custom">Organization Website</label>
-              <input type="url" formControlName="website" class="input-field" placeholder="https://company.com" />
+              <input type="url" formControlName="website" class="input-field" placeholder="https://projectflow.com" />
             </div>
 
             <div class="form-group-custom">
@@ -201,20 +201,20 @@ export class GeneralSettingsComponent implements OnInit {
 
   ngOnInit(): void {
     this.generalForm = this.fb.group({
-      workspaceName: ['Project Tracker', [Validators.required]],
-      workspaceSlug: ['project-tracker', [Validators.required]],
+      workspaceName: ['ProjectFlow', [Validators.required]],
+      workspaceSlug: ['project-flow', [Validators.required]],
       workspaceDesc: ['Core tracking system for engineering velocity metrics.'],
-      website: ['https://projecttracker.com'],
+      website: ['https://projectflow.com'],
       logoUrl: ['']
     });
   }
 
   resetForm(): void {
     this.generalForm.reset({
-      workspaceName: 'Project Tracker',
-      workspaceSlug: 'project-tracker',
+      workspaceName: 'ProjectFlow',
+      workspaceSlug: 'project-flow',
       workspaceDesc: 'Core tracking system for engineering velocity metrics.',
-      website: 'https://projecttracker.com',
+      website: 'https://projectflow.com',
       logoUrl: ''
     });
     this.generalForm.markAsPristine();

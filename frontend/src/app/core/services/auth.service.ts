@@ -65,4 +65,19 @@ export class AuthService {
   private loadTokenAndFetchUser(): void {
     this.getCurrentUser().subscribe();
   }
+
+  setToken(token: string): void {
+    localStorage.setItem('token', token);
+    this.loadTokenAndFetchUser();
+  }
+
+  loginWithGoogle(): void {
+    const redirectUri = encodeURIComponent(`${window.location.origin}/oauth2/redirect`);
+    window.location.href = `http://localhost:8080/oauth2/authorize/google?redirect_uri=${redirectUri}`;
+  }
+
+  loginWithGithub(): void {
+    const redirectUri = encodeURIComponent(`${window.location.origin}/oauth2/redirect`);
+    window.location.href = `http://localhost:8080/oauth2/authorize/github?redirect_uri=${redirectUri}`;
+  }
 }

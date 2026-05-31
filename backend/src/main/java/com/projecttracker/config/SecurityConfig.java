@@ -1,5 +1,9 @@
 package com.projecttracker.config;
 
+import com.projecttracker.security.oauth2.CustomOAuth2UserService;
+import com.projecttracker.security.oauth2.HttpCookieOAuth2AuthorizationRequestRepository;
+import com.projecttracker.security.oauth2.OAuth2AuthenticationFailureHandler;
+import com.projecttracker.security.oauth2.OAuth2AuthenticationSuccessHandler;
 import com.projecttracker.service.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -31,6 +35,10 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomUserDetailsService userDetailsService;
+    private final CustomOAuth2UserService oauth2UserService;
+    private final OAuth2AuthenticationSuccessHandler oauth2SuccessHandler;
+    private final OAuth2AuthenticationFailureHandler oauth2FailureHandler;
+    private final HttpCookieOAuth2AuthorizationRequestRepository cookieRepo;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -39,9 +47,20 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/auth/**", "/oauth2/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 .anyRequest().authenticated()
+            )
+            .oauth2Login(oauth2 -> oauth2
+                .authorizationEndpoint(ep -> ep
+                    .baseUri("/oauth2/authorize")
+                    .authorizationRequestRepository(cookieRepo))
+                .redirectionEndpoint(ep -> ep
+                    .baseUri("/oauth2/callback/*"))
+                .userInfoEndpoint(ui -> ui
+                    .userService(oauth2UserService))
+                .successHandler(oauth2SuccessHandler)
+                .failureHandler(oauth2FailureHandler)
             )
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

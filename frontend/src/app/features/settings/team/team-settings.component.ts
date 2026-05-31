@@ -103,7 +103,7 @@ interface PendingInvite {
           <div class="member-row" *ngFor="let m of filteredMembers">
             <!-- Avatar + identity -->
             <div class="member-identity">
-              <app-avatar [name]="m.name" [src]="m.avatar" size="md"></app-avatar>
+              <app-avatar [name]="m.name" [src]="m.avatar" size="lg"></app-avatar>
               <div class="identity-meta">
                 <p class="member-name">
                   {{ m.name }}
@@ -173,7 +173,7 @@ interface PendingInvite {
     .settings-content {
       flex: 1;
       padding: 40px 56px;
-      max-width: 760px;
+      max-width: 1000px;
     }
 
     .settings-section-header {
@@ -200,10 +200,11 @@ interface PendingInvite {
     /* Invite Panel */
     .invite-panel {
       background: var(--bg-surface);
-      border: 1px solid var(--border-subtle);
+      border: 1px solid var(--border-default);
       border-radius: var(--radius-lg);
-      padding: 20px;
-      margin-bottom: 24px;
+      padding: 24px;
+      margin-bottom: 32px;
+      box-shadow: 0 4px 20px -6px rgba(0, 0, 0, 0.1);
     }
 
     .invite-panel h3 {
@@ -291,21 +292,22 @@ interface PendingInvite {
       color: var(--status-danger);
     }
 
-    /* Members Table Redesign */
+    /* Members Table Card */
     .members-table-card {
       background: var(--bg-surface);
-      border: 1px solid var(--border-subtle);
+      border: 1px solid var(--border-default);
       border-radius: var(--radius-lg);
       overflow: hidden;
+      box-shadow: 0 4px 20px -6px rgba(0, 0, 0, 0.1);
     }
 
     .members-toolbar {
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 16px 20px;
+      padding: 16px 24px;
       border-bottom: 1px solid var(--border-subtle);
-      background: rgba(255,255,255,0.005);
+      background: rgba(255, 255, 255, 0.005);
     }
 
     .search-field {
@@ -322,21 +324,24 @@ interface PendingInvite {
     .member-count {
       margin-left: auto;
       font-size: 12px;
+      color: var(--text-muted);
     }
 
     .members-table-wrapper {
-      padding: 0 20px;
+      padding: 0;
     }
 
     .table-header-row {
       display: grid;
-      grid-template-columns: 2fr 120px 100px 100px 120px 80px;
+      grid-template-columns: 2.5fr 150px 120px 120px 160px 80px;
       align-items: center;
       gap: 16px;
-      padding: 12px 0;
-      border-bottom: 1px solid var(--border-subtle);
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border-strong);
       font-family: var(--font-mono);
-      font-size: 10px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
       text-transform: uppercase;
       color: var(--text-muted);
     }
@@ -347,12 +352,12 @@ interface PendingInvite {
 
     .member-row {
       display: grid;
-      grid-template-columns: 2fr 120px 100px 100px 120px 80px;
+      grid-template-columns: 2.5fr 150px 120px 120px 160px 80px;
       align-items: center;
       gap: 16px;
-      padding: 14px 0;
+      padding: 16px 24px;
       border-bottom: 1px solid var(--border-subtle);
-      transition: background var(--duration-fast);
+      transition: background-color var(--duration-fast);
       position: relative;
     }
 
@@ -362,9 +367,6 @@ interface PendingInvite {
 
     .member-row:hover {
       background: var(--bg-elevated);
-      margin: 0 -20px;
-      padding: 14px 20px;
-      border-radius: var(--radius-md);
     }
 
     .member-row:hover .member-actions {
@@ -374,17 +376,19 @@ interface PendingInvite {
     .member-identity {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 16px;
     }
 
     .identity-meta {
       display: flex;
       flex-direction: column;
+      gap: 2px;
     }
 
     .member-name {
-      font-size: 13.5px;
-      font-weight: 500;
+      font-family: var(--font-body);
+      font-size: 14.5px;
+      font-weight: 600;
       color: var(--text-primary);
       margin: 0;
       display: flex;
@@ -393,9 +397,11 @@ interface PendingInvite {
     }
 
     .member-email {
-      font-size: 11.5px;
-      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-secondary);
       margin: 0;
+      opacity: 0.8;
     }
 
     .you-badge {
@@ -407,16 +413,17 @@ interface PendingInvite {
     }
 
     .role-select {
-      background: transparent;
-      border: none;
+      background: var(--bg-void);
+      border: 1px solid var(--border-default);
       cursor: pointer;
       font-family: var(--font-mono);
       font-size: 11px;
+      font-weight: 600;
       appearance: none;
-      padding: 3px 8px;
+      padding: 6px 12px;
       border-radius: var(--radius-sm);
-      border: 1px solid transparent;
       outline: none;
+      transition: all var(--duration-fast);
     }
 
     .role-select:focus {
@@ -425,21 +432,21 @@ interface PendingInvite {
 
     /* Role badges classes */
     .role-select.manager {
-      background: var(--accent-glow);
-      color: var(--accent);
-      border-color: var(--border-accent);
+      background: var(--accent-glow) !important;
+      color: var(--accent) !important;
+      border-color: var(--border-accent) !important;
     }
 
     .role-select.team_lead {
-      background: rgba(183, 148, 244, 0.1);
-      color: var(--status-hold);
-      border-color: rgba(183, 148, 244, 0.25);
+      background: rgba(124, 58, 237, 0.08) !important;
+      color: var(--status-hold) !important;
+      border-color: rgba(124, 58, 237, 0.2) !important;
     }
 
     .role-select.teammate {
-      background: rgba(104, 211, 145, 0.1);
-      color: var(--status-active);
-      border-color: rgba(104, 211, 145, 0.25);
+      background: rgba(22, 163, 74, 0.08) !important;
+      color: var(--status-active) !important;
+      border-color: rgba(22, 163, 74, 0.2) !important;
     }
 
     .role-select[disabled] {
@@ -448,31 +455,44 @@ interface PendingInvite {
     }
 
     .count-chip {
-      font-size: 11px;
+      font-family: var(--font-body);
+      font-size: 12px;
+      font-weight: 500;
       background: var(--bg-void);
-      border: 1px solid var(--border-subtle);
+      border: 1px solid var(--border-default);
       border-radius: var(--radius-pill);
-      padding: 2px 8px;
-      color: var(--text-secondary);
+      padding: 4px 12px;
+      color: var(--text-primary);
     }
 
     .col-active {
+      font-family: var(--font-body);
+      font-size: 13px;
+      color: var(--text-secondary);
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
     }
 
     .col-active.online {
       color: var(--status-active);
+      font-weight: 500;
     }
 
     .online-dot {
       display: inline-block;
-      width: 6px;
-      height: 6px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
       background: var(--status-active);
+      box-shadow: 0 0 8px var(--status-active);
       animation: pulse 2s ease infinite;
+    }
+
+    .col-joined {
+      font-family: var(--font-body);
+      font-size: 13px;
+      color: var(--text-secondary);
     }
 
     .member-actions {
@@ -516,7 +536,14 @@ interface PendingInvite {
       50% { opacity: 0.4; }
     }
 
-    @media (max-width: 767px) {
+    @media (max-width: 1024px) {
+      .settings-content {
+        max-width: 100%;
+        padding: 40px 32px;
+      }
+    }
+
+    @media (max-width: 768px) {
       .settings-content {
         padding: 24px 16px;
       }
@@ -525,8 +552,9 @@ interface PendingInvite {
         align-items: stretch;
       }
       .table-header-row, .member-row {
-        grid-template-columns: 1fr 100px;
+        grid-template-columns: 1fr 120px;
         gap: 12px;
+        padding: 16px 20px;
       }
       .th-projects, .th-joined, .th-active, .th-actions,
       .member-projects, .col-joined, .col-active {
