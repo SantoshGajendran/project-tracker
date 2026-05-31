@@ -1,0 +1,169 @@
+<div class="projects-viewport">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Projects Directory</h1>
+      <p class="page-subtitle">Track and configure active portfolio campaigns</p>
+    </div>
+    <div class="header-actions">
+      <a 
+        *ngIf="authService.isManager()" 
+        mat-stroked-button 
+        routerLink="/import" 
+        class="bulk-import-btn">
+        <mat-icon>cloud_upload</mat-icon> Bulk Import
+      </a>
+      <button 
+        *ngIf="authService.isManager()" 
+        mat-raised-button 
+        color="primary" 
+        (click)="openCreateDialog()" 
+        class="create-btn">
+        <mat-icon>add</mat-icon> New Project
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters Panel -->
+  <mat-card class="filters-card glass-panel">
+    <div class="filters-container">
+      <div class="filter-group">
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Status</mat-label>
+          <mat-select [(ngModel)]="selectedStatus" (selectionChange)="applyFilters()">
+            <mat-option value="">All Statuses</mat-option>
+            <mat-option value="PLANNING">Planning</mat-option>
+            <mat-option value="IN_PROGRESS">In Progress</mat-option>
+            <mat-option value="ON_HOLD">On Hold</mat-option>
+            <mat-option value="COMPLETED">Completed</mat-option>
+            <mat-option value="CANCELLED">Cancelled</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Priority</mat-label>
+          <mat-select [(ngModel)]="selectedPriority" (selectionChange)="applyFilters()">
+            <mat-option value="">All Priorities</mat-option>
+            <mat-option value="LOW">Low</mat-option>
+            <mat-option value="MEDIUM">Medium</mat-option>
+            <mat-option value="HIGH">High</mat-option>
+            <mat-option value="CRITICAL">Critical</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <div class="search-box">
+          <mat-icon>search</mat-icon>
+          <input 
+            type="text" 
+            [(ngModel)]="searchQuery" 
+            (keyup)="applyFilters()" 
+            placeholder="Search projects..." />
+        </div>
+      </div>
+
+      <div class="toggle-group">
+        <button 
+          mat-button 
+          [class.active-mode]="viewMode === 'grid'" 
+          (click)="viewMode = 'grid'">
+          <mat-icon>grid_on</mat-icon> Grid
+        </button>
+        <button 
+          mat-button 
+          [class.active-mode]="viewMode === 'kanban'" 
+          (click)="viewMode = 'kanban'">
+          <mat-icon>view_week</mat-icon> Kanban
+        </button>
+      </div>
+    </div>
+  </mat-card>
+
+  <!-- Loading skeleton -->
+  <div *ngIf="loading" class="skeleton-grid">
+    <div class="proj-skeleton skeleton" *ngFor="let i of [1,2,3,4,5,6]"></div>
+  </div>
+
+  <div *ngIf="!loading">
+    <!-- Grid View Mode -->
+    <div *ngIf="viewMode === 'grid'" class="projects-grid">
+      <mat-card 
+        *ngFor="let p of filteredProjects" 
+        [routerLink]="['/projects', p.id]" 
+        class="project-card glass-panel glass-card-hover">
+        <div class="card-top">
+          <app-badge [label]="p.priority" type="priority"></app-badge>
+          <span *ngIf="p.isAtRisk" class="at-risk-label">
+            <mat-icon>report_problem</mat-icon> RISK
+          </span>
+        </div>
+        
+        <div class="card-main">
+          <h3>{{ p.name }}</h3>
+          <p class="description">{{ p.description || 'No description provided.' }}</p>
+        </div>
+
+        <div class="card-progress">
+          <div class="prog-meta">
+            <span>Progress</span>
+            <span class="pct">{{ p.progress }}%</span>
+          </div>
+          <app-progress-bar [value]="p.progress" [showLabel]="false"></app-progress-bar>
+        </div>
+
+        <div class="card-bottom">
+          <div class="due">
+            <mat-icon>event</mat-icon>
+            <span>Due {{ p.dueDate | date:'mediumDate' }}</span>
+          </div>
+          <app-badge [label]="p.status" type="status"></app-badge>
+        </div>
+      </mat-card>
+    </div>
+
+    <!-- Kanban View Mode -->
+    <div *ngIf="viewMode === 'kanban'" class="kanban-board">
+      <div *ngFor="let col of kanbanColumns" class="kanban-column glass-panel">
+        <div class="column-header">
+          <h4>{{ col.label }}</h4>
+          <span class="count">{{ getProjectsByStatus(col.status).length }}</span>
+        </div>
+
+        <div class="column-list">
+          <mat-card 
+            *ngFor="let p of getProjectsByStatus(col.status)" 
+            [routerLink]="['/projects', p.id]" 
+            class="kanban-project-card glass-panel glass-card-hover">
+            <div class="card-top">
+              <app-badge [label]="p.priority" type="priority"></app-badge>
+              <span *ngIf="p.isAtRisk" class="at-risk-mini"><mat-icon>warning</mat-icon></span>
+            </div>
+            
+            <h5>{{ p.name }}</h5>
+            
+            <div class="card-progress" style="margin: 12px 0;">
+              <app-progress-bar [value]="p.progress" [showLabel]="false"></app-progress-bar>
+            </div>
+            
+            <div class="kanban-footer">
+              <span class="due-date">Due {{ p.dueDate | date:'shortDate' }}</span>
+            </div>
+          </mat-card>
+          
+          <div *ngIf="getProjectsByStatus(col.status).length === 0" class="kanban-empty">
+            <p>No projects</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <app-empty-state 
+      *ngIf="filteredProjects.length === 0" 
+      icon="folder_open"
+      title="No Projects Found"
+      description="No projects match your filter configuration. Create a new project or reset your search."
+      [actionLabel]="authService.isManager() ? 'Create Project' : undefined"
+      actionIcon="add"
+      (action)="openCreateDialog()">
+    </app-empty-state>
+  </div>
+</div>

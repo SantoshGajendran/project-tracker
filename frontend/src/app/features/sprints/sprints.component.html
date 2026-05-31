@@ -1,0 +1,192 @@
+<div class="sprints-viewport">
+
+  <!-- ── PAGE HEADER ── -->
+  <div class="sprint-page-header">
+    <div class="header-left">
+      <div class="page-eyebrow">
+        <span class="eyebrow-dot"></span>
+        Sprint Analytics
+      </div>
+      <h1 class="page-title-main">Burndown &amp; Velocity</h1>
+      <p class="page-subtitle-main">Track release timelines, team velocity and sprint progress</p>
+    </div>
+
+    <div class="sprint-selector-wrap" *ngIf="sprints.length > 0">
+      <mat-form-field appearance="outline" class="sprint-selector">
+        <mat-label>Active Sprint</mat-label>
+        <mat-select [value]="selectedSprintId" (selectionChange)="onSprintChange($event.value)">
+          <mat-option *ngFor="let s of sprints" [value]="s.id">
+            {{ s.name }} · {{ s.status }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <!-- ── SKELETON ── -->
+  <div *ngIf="loading" class="skeleton-container">
+    <div class="sprint-meta-strip">
+      <div class="skeleton" style="height:76px; border-radius:16px;"></div>
+      <div class="skeleton" style="height:76px; border-radius:16px;"></div>
+      <div class="skeleton" style="height:76px; border-radius:16px;"></div>
+      <div class="skeleton" style="height:76px; border-radius:16px;"></div>
+    </div>
+    <div class="skeleton" style="height:420px; border-radius:24px;"></div>
+    <div class="skeleton" style="height:340px; border-radius:24px;"></div>
+  </div>
+
+  <!-- ── LOADED STATE ── -->
+  <div *ngIf="!loading">
+
+    <!-- Sprint Meta Strip -->
+    <div class="sprint-meta-strip" *ngIf="burndownData">
+      <div class="meta-card accent-blue">
+        <div class="meta-icon"><span class="material-icons" style="font-size:18px">speed</span></div>
+        <div class="meta-text">
+          <span class="meta-label">Sprint</span>
+          <span class="meta-value">{{ burndownData.sprintName }}</span>
+        </div>
+      </div>
+
+      <div class="meta-card accent-green">
+        <div class="meta-icon"><span class="material-icons" style="font-size:18px">flag</span></div>
+        <div class="meta-text">
+          <span class="meta-label">Status</span>
+          <span class="meta-badge" [ngClass]="{
+            'active':   selectedSprint?.status === 'ACTIVE',
+            'planning': selectedSprint?.status === 'PLANNED',
+            'done':     selectedSprint?.status === 'COMPLETED'
+          }">
+            {{ selectedSprint?.status || 'ACTIVE' }}
+          </span>
+        </div>
+      </div>
+
+      <div class="meta-card accent-amber">
+        <div class="meta-icon"><span class="material-icons" style="font-size:18px">event</span></div>
+        <div class="meta-text">
+          <span class="meta-label">Start → End</span>
+          <span class="meta-value" style="font-size:12px;">
+            {{ burndownData.startDate | date:'MMM d' }} → {{ burndownData.endDate | date:'MMM d' }}
+          </span>
+        </div>
+      </div>
+
+      <div class="meta-card accent-violet">
+        <div class="meta-icon"><span class="material-icons" style="font-size:18px">checklist_rtl</span></div>
+        <div class="meta-text">
+          <span class="meta-label">Total Work Items</span>
+          <span class="meta-value">{{ burndownData.totalStoryPoints }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="charts-container" *ngIf="sprints.length > 0">
+
+      <!-- ── 1. BURNDOWN LINE CHART ── -->
+      <mat-card class="chart-card">
+        <div class="chart-inner">
+          <div class="chart-header">
+            <div class="chart-title-group">
+              <div class="chart-label-tag">
+                <span class="label-line"></span>
+                Burndown Tracking
+              </div>
+              <h2 class="chart-title">Sprint Burndown Chart</h2>
+              <p class="chart-subtitle" *ngIf="burndownData">
+                {{ burndownData.startDate | date:'MMMM d' }} &ndash; {{ burndownData.endDate | date:'MMMM d, y' }}
+              </p>
+            </div>
+
+            <div class="chart-meta-right" *ngIf="burndownData">
+              <div class="progress-pill">
+                <div class="progress-ring-wrap">
+                  <svg class="progress-ring" width="32" height="32" viewBox="0 0 32 32">
+                    <circle class="progress-ring-bg" cx="16" cy="16" r="14"/>
+                    <circle class="progress-ring-fill" cx="16" cy="16" r="14"
+                            [style.stroke-dashoffset]="getProgressOffset()"/>
+                  </svg>
+                  <div class="progress-ring-text">{{ getBurndownPct() }}%</div>
+                </div>
+                <div class="progress-details">
+                  <span class="progress-pct">{{ getBurndownPct() }}% done</span>
+                  <span class="progress-caption">of sprint elapsed</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="chart-wrapper">
+            <canvas #burnCanvas></canvas>
+          </div>
+        </div>
+
+        <div class="chart-divider"></div>
+        <div class="chart-footer">
+          <div class="legend-items">
+            <div class="legend-item">
+              <span class="legend-dot" style="background:#63B3ED;box-shadow:0 0 6px rgba(99,179,237,0.6)"></span>
+              Actual Remaining
+            </div>
+            <div class="legend-item" style="color:var(--text-muted)">
+              <span class="legend-dash" style="color:#4A5568; border-color: #4A5568;"></span>
+              Ideal Burndown
+            </div>
+          </div>
+          <div class="stat-chips">
+            <div class="stat-chip" [ngClass]="getBurndownStatus()">
+              <span class="chip-icon material-icons" style="font-size:14px">{{ getBurndownStatusIcon() }}</span>
+              {{ getBurndownStatusLabel() }}
+            </div>
+          </div>
+        </div>
+      </mat-card>
+
+      <!-- ── 2. VELOCITY BAR CHART ── -->
+      <mat-card class="chart-card">
+        <div class="chart-inner">
+          <div class="chart-header">
+            <div class="chart-title-group">
+              <div class="chart-label-tag">
+                <span class="label-line"></span>
+                Team Velocity
+              </div>
+              <h2 class="chart-title">Velocity History</h2>
+              <p class="chart-subtitle">Completed work items per sprint over time</p>
+            </div>
+          </div>
+
+          <div class="chart-wrapper velocity-wrapper">
+            <canvas #velocityCanvas></canvas>
+          </div>
+        </div>
+
+        <div class="chart-divider"></div>
+        <div class="chart-footer">
+          <div class="legend-items">
+            <div class="legend-item">
+              <span class="legend-dot" style="background:#68D391;box-shadow:0 0 6px rgba(104,211,145,0.5)"></span>
+              Completed Items
+            </div>
+          </div>
+          <div class="stat-chips">
+            <div class="stat-chip">
+              <span class="chip-icon material-icons" style="font-size:14px">trending_up</span>
+              Avg: {{ getAvgVelocity() }} items/sprint
+            </div>
+          </div>
+        </div>
+      </mat-card>
+
+    </div>
+
+    <!-- ── EMPTY STATE ── -->
+    <app-empty-state
+      *ngIf="sprints.length === 0"
+      icon="calendar_today"
+      title="No Sprints Available"
+      description="Create a sprint on a project detail page to start tracking velocity.">
+    </app-empty-state>
+
+  </div>
+</div>

@@ -1,0 +1,231 @@
+/* ─── ANGULAR MATERIAL OVERRIDES ─── */
+
+/* Cards */
+.mat-mdc-card {
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: none !important;
+  color: var(--text-primary) !important;
+}
+
+/* Tables */
+.mat-mdc-table {
+  background: transparent !important;
+}
+
+.mat-mdc-header-row {
+  border-bottom: 1px solid var(--border-default) !important;
+  background: transparent !important;
+}
+
+.mat-mdc-row {
+  border-bottom: 1px solid var(--border-subtle) !important;
+  background: transparent !important;
+  transition: background var(--duration-fast) var(--ease-in-out);
+}
+
+.mat-mdc-row:hover {
+  background: var(--bg-elevated) !important;
+}
+
+.mat-mdc-header-cell {
+  color: var(--text-secondary) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  border-bottom: none !important;
+}
+
+.mat-mdc-cell {
+  color: var(--text-primary) !important;
+  font-family: var(--font-body) !important;
+  font-size: 13px !important;
+  border-bottom: none !important;
+}
+
+/* Dialogs */
+.mat-mdc-dialog-container {
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-strong) !important;
+  border-radius: var(--radius-xl) !important;
+  box-shadow: 0 32px 80px rgba(9, 9, 11, 0.12), 0 0 0 1px rgba(9, 9, 11, 0.04) !important;
+}
+
+.mat-mdc-dialog-container .mdc-dialog__surface {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.mat-mdc-dialog-title {
+  font-family: var(--font-display) !important;
+  font-size: 24px !important;
+  font-weight: 400 !important;
+  color: var(--text-primary) !important;
+}
+
+.mat-mdc-dialog-content {
+  color: var(--text-secondary) !important;
+  font-family: var(--font-body) !important;
+}
+
+/* Form fields & Inputs */
+.mat-mdc-form-field {
+  font-family: var(--font-body) !important;
+}
+
+.mat-mdc-form-field-wrapper {
+  padding-bottom: 0 !important;
+}
+
+.mat-mdc-text-field-wrapper {
+  background-color: var(--bg-elevated) !important;
+  border-radius: var(--radius-md) !important;
+  border: 1px solid var(--border-default) !important;
+  transition: border-color var(--duration-fast), box-shadow var(--duration-fast) !important;
+}
+
+.mat-mdc-text-field-wrapper:hover {
+  border-color: var(--border-strong) !important;
+  background-color: var(--bg-elevated) !important;
+}
+
+.mat-mdc-form-field.mat-focused .mat-mdc-text-field-wrapper {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px var(--accent-glow) !important;
+  background-color: var(--bg-elevated) !important;
+}
+
+/* Hide placeholder when label is NOT floated (label + placeholder overlap fix) */
+.mdc-text-field:not(.mdc-text-field--label-floating) .mat-mdc-input-element::placeholder {
+  opacity: 0 !important;
+  color: transparent !important;
+}
+
+/* Show placeholder only when label has floated up (field focused or has value) */
+.mdc-text-field--label-floating .mat-mdc-input-element::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 0.7 !important;
+}
+
+/* Fields with no label — always show placeholder */
+.mdc-text-field--no-label .mat-mdc-input-element::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 1 !important;
+}
+
+.mat-mdc-form-field .mdc-line-ripple {
+  display: none !important; /* Hide material bottom line ripple */
+}
+
+/* Remove default material outline notched border overlays */
+.mat-mdc-form-field .mdc-notched-outline__leading,
+.mat-mdc-form-field .mdc-notched-outline__notch,
+.mat-mdc-form-field .mdc-notched-outline__trailing {
+  border: none !important;
+}
+
+.mat-mdc-form-field-infix {
+  padding-top: 12px !important;
+  padding-bottom: 12px !important;
+  min-height: unset !important;
+}
+
+.mat-mdc-input-element {
+  color: var(--text-primary) !important;
+}
+
+.mat-mdc-form-field-label,
+.mdc-floating-label {
+  color: var(--text-muted) !important;
+}
+
+.mat-mdc-form-field.mat-focused .mat-mdc-form-field-label,
+.mat-mdc-form-field.mat-focused .mdc-floating-label {
+  color: var(--accent) !important;
+}
+
+/* Floating label (above input) */
+.mdc-text-field--outlined .mdc-floating-label--float-above {
+  color: var(--accent) !important;
+}
+
+/* Chips / Badges */
+.mat-mdc-chip-grid {
+  min-height: unset !important;
+}
+
+.mat-mdc-standard-chip {
+  background-color: var(--bg-elevated) !important;
+  border: 1px solid var(--border-default) !important;
+  color: var(--text-primary) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 11px !important;
+  border-radius: var(--radius-sm) !important;
+}
+
+.mat-mdc-standard-chip .mdc-evolution-chip__text-label,
+.mat-mdc-chip-row .mdc-evolution-chip__text-label {
+  color: var(--text-primary) !important;
+}
+
+/* Select and Option */
+.mat-mdc-select {
+  font-family: var(--font-body) !important;
+  color: var(--text-primary) !important;
+}
+
+.mat-mdc-select-arrow {
+  color: var(--text-muted) !important;
+}
+
+.mat-mdc-select-panel {
+  background-color: var(--bg-elevated) !important;
+  border: 1px solid var(--border-strong) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.25) !important;
+}
+
+[theme="dark"] .mat-mdc-select-panel {
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255,255,255,0.06) !important;
+}
+
+.mat-mdc-option {
+  color: var(--text-secondary) !important;
+}
+
+.mat-mdc-option:hover:not(.mdc-list-item--disabled),
+.mat-mdc-option.mat-mdc-option-active {
+  background-color: var(--bg-overlay) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Datepicker */
+.mat-datepicker-content {
+  background-color: var(--bg-elevated) !important;
+  border: 1px solid var(--border-strong) !important;
+  border-radius: var(--radius-lg) !important;
+  color: var(--text-primary) !important;
+}
+
+.mat-calendar-body-cell-content {
+  color: var(--text-secondary) !important;
+}
+
+.mat-calendar-body-cell-content:hover {
+  background-color: var(--bg-overlay) !important;
+  color: var(--text-primary) !important;
+}
+
+.mat-calendar-body-selected {
+  background-color: var(--accent) !important;
+  color: var(--bg-void) !important;
+}
+
+/* Disable all default material ripples */
+.mat-ripple, .mat-mdc-ripple {
+  display: none !important;
+}

@@ -1,0 +1,200 @@
+<div class="team-viewport">
+  <!-- Team Members Grid View -->
+  <div *ngIf="!selectedMember">
+    <div class="page-header">
+      <h1 class="page-title">Team Directory</h1>
+      <p class="page-subtitle">Workspace operators, roles, and real-time velocity metrics</p>
+    </div>
+
+    <!-- Loading spinner -->
+    <div *ngIf="loading" class="skeleton-grid">
+      <div class="skeleton-member-card skeleton" *ngFor="let i of [1,2,3,4,5,6]"></div>
+    </div>
+
+    <div *ngIf="!loading" class="members-grid">
+      <div 
+        *ngFor="let m of members" 
+        (click)="selectMember(m)" 
+        class="member-card">
+        
+        <div class="member-header">
+          <div class="avatar-ring-container">
+            <svg class="progress-ring" width="58" height="58">
+              <circle class="progress-ring__circle-bg" stroke="rgba(255,255,255,0.03)" stroke-width="2" fill="transparent" r="26" cx="29" cy="29"/>
+              <circle class="progress-ring__circle" stroke="var(--accent)" stroke-width="2" fill="transparent" r="26" cx="29" cy="29"
+                      stroke-dasharray="163.3"
+                      [style.strokeDashoffset]="163.3 - (m.productivityScore / 100) * 163.3"/>
+            </svg>
+            <app-avatar [name]="m.name" [src]="m.avatar" size="lg"></app-avatar>
+          </div>
+          <div class="meta">
+            <h3>{{ m.name }}</h3>
+            <span class="email">{{ m.email }}</span>
+          </div>
+        </div>
+
+        <div class="member-role-row">
+          <app-badge [label]="m.role" type="status"></app-badge>
+          <div class="score" title="Productivity Score based on tasks and story points completed.">
+            <span>Score:</span> <strong>{{ m.productivityScore }}</strong>
+          </div>
+        </div>
+
+        <div class="member-stats-row">
+          <div class="stat-col">
+            <span class="lbl">Active Projs</span>
+            <span class="val">{{ m.activeProjectsCount }}</span>
+          </div>
+          <div class="stat-col">
+            <span class="lbl">Weekly Done</span>
+            <span class="val">{{ m.tasksCompletedThisWeek }}</span>
+          </div>
+          <div class="stat-col">
+            <span class="lbl">Total Done</span>
+            <span class="val">{{ m.tasksCompletedTotal }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Selected Member Profile View -->
+  <div *ngIf="selectedMember" class="member-profile-view">
+    <button mat-button class="back-link" (click)="selectedMember = undefined">
+      <mat-icon>arrow_back</mat-icon> Back to Team Directory
+    </button>
+
+    <div class="profile-grid">
+      <!-- Profile Sidebar Panel -->
+      <div class="profile-sidebar">
+        <div class="sidebar-card">
+          <div class="profile-header-details">
+            <div class="avatar-ring-container-xl">
+              <svg class="progress-ring" width="88" height="88">
+                <circle class="progress-ring__circle-bg" stroke="rgba(255,255,255,0.03)" stroke-width="2" fill="transparent" r="40" cx="44" cy="44"/>
+                <circle class="progress-ring__circle" stroke="var(--accent)" stroke-width="2" fill="transparent" r="40" cx="44" cy="44"
+                        stroke-dasharray="251.3"
+                        [style.strokeDashoffset]="251.3 - (selectedMember.productivityScore / 100) * 251.3"/>
+              </svg>
+              <app-avatar [name]="selectedMember.name" [src]="selectedMember.avatar" size="xl"></app-avatar>
+            </div>
+            <h2>{{ selectedMember.name }}</h2>
+            <span class="email">{{ selectedMember.email }}</span>
+            <app-badge [label]="selectedMember.role" type="status" style="margin-top: 8px; display: inline-block;"></app-badge>
+          </div>
+
+          <div class="prod-score-card">
+            <span class="lbl">Productivity Score</span>
+            <span class="score-val">{{ selectedMember.productivityScore }}</span>
+          </div>
+
+          <div class="sidebar-stats">
+            <div class="stat-item">
+              <div class="item-label">
+                <mat-icon class="green-icon">check_circle_outline</mat-icon>
+                <span>Tasks Completed</span>
+              </div>
+              <strong>{{ selectedMember.tasksCompletedTotal }}</strong>
+            </div>
+
+            <div class="stat-item">
+              <div class="item-label">
+                <mat-icon class="blue-icon">play_circle_outline</mat-icon>
+                <span>Tasks In Progress</span>
+              </div>
+              <strong>{{ selectedMember.tasksInProgress }}</strong>
+            </div>
+
+            <div class="stat-item">
+              <div class="item-label">
+                <mat-icon class="red-icon">error_outline</mat-icon>
+                <span>Overdue Tasks</span>
+              </div>
+              <strong [ngClass]="{'has-overdue': selectedMember.tasksOverdue > 0}">{{ selectedMember.tasksOverdue }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile Main Panel -->
+      <div class="profile-main">
+        <!-- 1. Productivity weekly bar chart -->
+        <div class="section-card" style="margin-bottom: 24px;">
+          <div class="sec-header">
+            <h3>Productivity Chart (Last 8 Weeks Velocity)</h3>
+          </div>
+          <div class="chart-container">
+            <canvas #prodChartCanvas></canvas>
+          </div>
+        </div>
+
+        <!-- 2. Active Projects -->
+        <div class="section-card" style="margin-bottom: 24px;">
+          <div class="sec-header">
+            <h3>Active Project Assignments</h3>
+          </div>
+          <div class="project-list-wrapper">
+            <div *ngIf="selectedMemberProjects.length > 0" class="member-proj-grid">
+              <div 
+                *ngFor="let p of selectedMemberProjects" 
+                [routerLink]="['/projects', p.id]"
+                class="member-proj-item">
+                
+                <div class="top">
+                  <h5>{{ p.name }}</h5>
+                  <app-badge [label]="p.priority" type="priority"></app-badge>
+                </div>
+                
+                <div class="progress" style="margin: 12px 0;">
+                  <app-progress-bar [value]="p.progress" [showLabel]="false"></app-progress-bar>
+                </div>
+                
+                <div class="bottom">
+                  <span>Progress: <strong>{{ p.progress }}%</strong></span>
+                  <app-badge [label]="p.status" type="status"></app-badge>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="selectedMemberProjects.length === 0" class="empty-embed">
+              <p>No active project assignments.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Task History -->
+        <div class="section-card">
+          <div class="sec-header">
+            <h3>Task History</h3>
+          </div>
+          <div class="task-history-wrapper">
+            <table *ngIf="selectedMemberTasks.length > 0" class="task-history-table">
+              <thead>
+                <tr>
+                  <th>Task Title</th>
+                  <th>Project</th>
+                  <th>Priority</th>
+                  <th>Status</th>
+                  <th>Due Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let t of selectedMemberTasks">
+                  <td class="title-cell"><a [routerLink]="['/tasks']" [queryParams]="{search: t.title}">{{ t.title }}</a></td>
+                  <td>{{ t.projectName }}</td>
+                  <td><app-badge [label]="t.priority" type="priority"></app-badge></td>
+                  <td><app-badge [label]="t.status" type="task-status"></app-badge></td>
+                  <td>{{ t.dueDate ? (t.dueDate | date:'mediumDate') : 'No due date' }}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div *ngIf="selectedMemberTasks.length === 0" class="empty-embed">
+              <p>No tasks found in history.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

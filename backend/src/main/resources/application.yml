@@ -1,0 +1,41 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: project-tracker-backend
+  datasource:
+    url: jdbc:postgresql://localhost:5432/project_tracker
+    username: postgres
+    password: Saazvat@123
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+jwt:
+  secret: 9a65a3d242a32c78a3c89bcf28131eefc4a169b183654d2e8b2839d8924b1234b6b7a8d9e2a3c4b5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9
+  expiration: 86400000 # 24 hours (in milliseconds)
+  header: Authorization
+  prefix: "Bearer "
+
+logging:
+  level:
+    org.springframework.security: INFO
+    org.springframework.web: INFO
+    org.hibernate.SQL: INFO
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: alpha

@@ -1,0 +1,149 @@
+<div class="tasks-viewport">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Tasks Directory</h1>
+      <p class="page-subtitle">Configure workspace tickets and deliverables globally</p>
+    </div>
+    <button mat-raised-button class="create-btn" (click)="openCreateTaskModal()">
+      <mat-icon>add</mat-icon> Create Task
+    </button>
+  </div>
+
+  <!-- Filters panel -->
+  <mat-card class="filters-card glass-panel">
+    <div class="filters-container">
+      <mat-form-field appearance="outline" class="filter-field flex-grow-1">
+        <mat-label>Project</mat-label>
+        <mat-select [(ngModel)]="selectedProjectId" (selectionChange)="loadTasks()">
+          <mat-option value="">All Projects</mat-option>
+          <mat-option *ngFor="let p of projects" [value]="p.id">
+            {{ p.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field flex-grow-1">
+        <mat-label>Assignee</mat-label>
+        <mat-select [(ngModel)]="selectedAssigneeId" (selectionChange)="loadTasks()">
+          <mat-option value="">All Assignees</mat-option>
+          <mat-option *ngFor="let u of users" [value]="u.id">
+            {{ u.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field flex-grow-1">
+        <mat-label>Status</mat-label>
+        <mat-select [(ngModel)]="selectedStatus" (selectionChange)="loadTasks()">
+          <mat-option value="">All Statuses</mat-option>
+          <mat-option value="TODO">To Do</mat-option>
+          <mat-option value="IN_PROGRESS">In Progress</mat-option>
+          <mat-option value="IN_REVIEW">In Review</mat-option>
+          <mat-option value="DONE">Done</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field flex-grow-1">
+        <mat-label>Priority</mat-label>
+        <mat-select [(ngModel)]="selectedPriority" (selectionChange)="loadTasks()">
+          <mat-option value="">All Priorities</mat-option>
+          <mat-option value="LOW">Low</mat-option>
+          <mat-option value="MEDIUM">Medium</mat-option>
+          <mat-option value="HIGH">High</mat-option>
+          <mat-option value="CRITICAL">Critical</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <div class="search-box flex-grow-2">
+        <mat-icon>search</mat-icon>
+        <input 
+          type="text" 
+          [(ngModel)]="searchQuery" 
+          (keyup.enter)="loadTasks()" 
+          placeholder="Search task titles..." />
+      </div>
+    </div>
+  </mat-card>
+
+  <!-- Loading Skeleton -->
+  <div *ngIf="loading" class="skeleton-container">
+    <div class="skeleton" style="height: 50px; margin-bottom: 8px;" *ngFor="let i of [1,2,3,4,5,6]"></div>
+  </div>
+
+  <div *ngIf="!loading">
+    <div class="table-card glass-panel" *ngIf="tasks.length > 0">
+      <table class="tasks-table">
+        <thead>
+          <tr>
+            <th>Task Title</th>
+            <th>Project</th>
+            <th>Assignee</th>
+            <th>Priority</th>
+            <th>Status</th>
+            <th>Due Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let t of tasks" [ngClass]="{'overdue-row': isOverdue(t)}">
+            <td class="task-title-cell">
+              <div class="title-cell-content">
+                <mat-icon *ngIf="isOverdue(t)" class="overdue-icon" title="Overdue Task">error_outline</mat-icon>
+                <span>{{ t.title }}</span>
+              </div>
+            </td>
+            <td>
+              <a [routerLink]="['/projects', t.projectId]" class="proj-link">{{ t.projectName }}</a>
+            </td>
+            <td>
+              <div *ngIf="t.assignedToName" class="table-user">
+                <app-avatar [name]="t.assignedToName" [src]="t.assignedToAvatar" size="sm"></app-avatar>
+                <span>{{ t.assignedToName }}</span>
+              </div>
+              <span *ngIf="!t.assignedToName" class="unassigned-text">Unassigned</span>
+            </td>
+            <td><app-badge [label]="t.priority" type="priority"></app-badge></td>
+            <td>
+              <!-- Dropdown status modification if performer has access -->
+              <mat-select 
+                [value]="t.status" 
+                (selectionChange)="onStatusChange(t.id, $event.value)"
+                class="status-dropdown">
+                <mat-option value="TODO">To Do</mat-option>
+                <mat-option value="IN_PROGRESS">In Progress</mat-option>
+                <mat-option value="IN_REVIEW">In Review</mat-option>
+                <mat-option value="DONE">Done</mat-option>
+              </mat-select>
+            </td>
+            <td class="date-cell" [ngClass]="{'overdue': isOverdue(t)}">
+              {{ t.dueDate ? (t.dueDate | date:'mediumDate') : 'No due date' }}
+            </td>
+            <td>
+              <div class="actions-cell">
+                <button 
+                  *ngIf="authService.isManager()" 
+                  mat-icon-button 
+                  color="warn" 
+                  (click)="deleteTask(t.id)" 
+                  title="Delete Task">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Empty State -->
+    <app-empty-state 
+      *ngIf="tasks.length === 0" 
+      icon="playlist_add_check"
+      title="No Tasks Found"
+      description="No task matches your filter parameters. Add a new task to your project board."
+      actionLabel="Create Task"
+      actionIcon="add"
+      (action)="openCreateTaskModal()">
+    </app-empty-state>
+  </div>
+</div>

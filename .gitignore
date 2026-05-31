@@ -1,0 +1,26 @@
+# Maven (Backend)
+backend/target/
+backend/*.releaseBackup
+
+# Node/Angular (Frontend)
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/tmp/
+frontend/out-tsc/
+frontend/bazel-out/
+
+# IDEs & Editors
+.idea/
+.vscode/
+*.local
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+
+# Graphify
+graphify-out/

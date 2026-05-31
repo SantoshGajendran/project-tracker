@@ -1,0 +1,344 @@
+<div class="detail-viewport" *ngIf="!loading">
+  <!-- Back link -->
+  <a routerLink="/projects" class="back-link">
+    <mat-icon>arrow_back</mat-icon> Back to Projects Directory
+  </a>
+
+  <!-- Project Header -->
+  <div class="project-header glass-panel">
+    <div class="header-main">
+      <div class="title-row">
+        <h1 class="project-title">{{ detail?.project?.name }}</h1>
+        <div class="badges">
+          <app-badge [label]="detail?.project?.priority || ''" type="priority"></app-badge>
+          <span *ngIf="detail?.project?.isAtRisk" class="at-risk-label">
+            <mat-icon>report_problem</mat-icon> AT RISK
+          </span>
+        </div>
+      </div>
+      <p class="description">{{ detail?.project?.description }}</p>
+      
+      <div class="dates-meta">
+        <div class="meta-item">
+          <mat-icon>event</mat-icon>
+          <span>Started: <strong>{{ detail?.project?.startDate | date:'mediumDate' }}</strong></span>
+        </div>
+        <div class="meta-item">
+          <mat-icon>event_busy</mat-icon>
+          <span>Due: <strong>{{ detail?.project?.dueDate | date:'mediumDate' }}</strong></span>
+        </div>
+        <div class="meta-item">
+          <mat-icon>person</mat-icon>
+          <span>Created By: <strong>{{ detail?.project?.createdByName }}</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-progress">
+      <div class="status-selector">
+        <label>Project Status:</label>
+        <mat-select 
+          [value]="detail?.project?.status" 
+          [disabled]="!authService.isManager()"
+          (selectionChange)="onProjectStatusChange($event.value)"
+          class="status-dropdown">
+          <mat-option value="PLANNING">Planning</mat-option>
+          <mat-option value="IN_PROGRESS">In Progress</mat-option>
+          <mat-option value="ON_HOLD">On Hold</mat-option>
+          <mat-option value="COMPLETED">Completed</mat-option>
+          <mat-option value="CANCELLED">Cancelled</mat-option>
+        </mat-select>
+      </div>
+
+      <div class="prog-wrapper">
+        <div class="prog-meta">
+          <span>Overall Project Progress</span>
+          <strong>{{ detail?.project?.progress }}%</strong>
+        </div>
+        <app-progress-bar [value]="detail?.project?.progress || 0" [showLabel]="false"></app-progress-bar>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs Navigation -->
+  <mat-tab-group class="detail-tabs" animationDuration="0ms">
+    <!-- 1. OVERVIEW TAB -->
+    <mat-tab label="Overview">
+      <div class="tab-content overview-grid">
+        <div class="overview-left">
+          <!-- Summary Cards -->
+          <div class="stats-cards">
+            <div class="stat-card glass-panel">
+              <span class="val">{{ detail?.totalTasks }}</span>
+              <span class="lbl">Total Tasks</span>
+            </div>
+            <div class="stat-card glass-panel">
+              <span class="val">{{ detail?.completedTasks }}</span>
+              <span class="lbl">Completed Tasks</span>
+            </div>
+            <div class="stat-card glass-panel">
+              <span class="val">{{ detail?.inProgressTasks }}</span>
+              <span class="lbl">In Progress Tasks</span>
+            </div>
+            <div class="stat-card glass-panel">
+              <span class="val font-bold text-indigo-600">{{ detail?.members?.length }}</span>
+              <span class="lbl">Assigned Team</span>
+            </div>
+          </div>
+
+          <!-- Members Brief -->
+          <mat-card class="section-card glass-panel">
+            <div class="sec-header">
+              <h3>Project Team Members</h3>
+            </div>
+            <div class="members-brief-list">
+              <div *ngFor="let m of detail?.members" class="brief-member-item">
+                <app-avatar [name]="m.userName" [src]="m.userAvatar" size="sm"></app-avatar>
+                <div class="details">
+                  <span class="name">{{ m.userName }}</span>
+                  <span class="email">{{ m.userEmail }}</span>
+                </div>
+                <app-badge [label]="m.role" type="status"></app-badge>
+              </div>
+            </div>
+          </mat-card>
+        </div>
+
+        <div class="overview-right">
+          <!-- Project Activity Logs -->
+          <mat-card class="section-card activity-section glass-panel">
+            <div class="sec-header">
+              <h3>Recent Actions</h3>
+            </div>
+            <div class="detail-activities-list">
+              <div *ngFor="let act of activities" class="detail-activity-item">
+                <div class="bullet"></div>
+                <div class="meta">
+                  <p class="desc"><strong>{{ act.performedByName || 'System' }}</strong> {{ act.description }}</p>
+                  <span class="time">{{ act.timestamp | date:'shortTime' }} - {{ act.timestamp | date:'mediumDate' }}</span>
+                </div>
+              </div>
+              <div *ngIf="activities.length === 0" class="empty-embed">
+                <p>No recent actions logged.</p>
+              </div>
+            </div>
+          </mat-card>
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- 2. KANBAN BOARD TAB -->
+    <mat-tab label="Task Board">
+      <div class="tab-content board-tab">
+        <div class="board-top-actions">
+          <span>Manage sprint workflow items dynamically</span>
+          <button mat-raised-button color="primary" (click)="openCreateTaskDialog()">
+            <mat-icon>add</mat-icon> Add Task
+          </button>
+        </div>
+
+        <div class="kanban-task-board" cdkDropListGroup>
+          <div *ngFor="let lane of boardLanes" class="board-lane glass-panel">
+            <div class="lane-header">
+              <h4>{{ lane.label }}</h4>
+              <span class="count">{{ lane.tasks.length }}</span>
+            </div>
+
+            <div 
+              cdkDropList 
+              [cdkDropListData]="lane.tasks" 
+              [id]="lane.status"
+              (cdkDropListDropped)="onTaskDropped($event)"
+              class="lane-drop-zone">
+              
+              <mat-card 
+                *ngFor="let t of lane.tasks" 
+                cdkDrag 
+                [routerLink]="['/tasks']"
+                [queryParams]="{search: t.title}"
+                class="board-task-card glass-panel glass-card-hover">
+                
+                <div class="task-top">
+                  <app-badge [label]="t.priority" type="priority"></app-badge>
+                </div>
+                
+                <h5 class="title">{{ t.title }}</h5>
+                <p *ngIf="t.description" class="desc">{{ t.description }}</p>
+
+                <div class="task-bottom">
+                  <div class="assignee-meta" *ngIf="t.assignedToName">
+                    <app-avatar [name]="t.assignedToName" [src]="t.assignedToAvatar" size="sm"></app-avatar>
+                    <span>{{ t.assignedToName }}</span>
+                  </div>
+                  <div class="assignee-meta unassigned" *ngIf="!t.assignedToName">
+                    <mat-icon>person_outline</mat-icon>
+                    <span>Unassigned</span>
+                  </div>
+                </div>
+              </mat-card>
+
+              <div *ngIf="lane.tasks.length === 0" class="lane-empty">
+                <p>Drag tasks here</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- 3. BACKLOG TAB -->
+    <mat-tab label="Backlog">
+      <div class="tab-content backlog-tab">
+        <div class="board-top-actions">
+          <span>Comprehensive project task list</span>
+          <button mat-raised-button color="primary" (click)="openCreateTaskDialog()">
+            <mat-icon>add</mat-icon> Create Task
+          </button>
+        </div>
+
+        <div class="backlog-list">
+          <table *ngIf="backlogTasks.length > 0" class="backlog-table">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Assignee</th>
+                <th>Sprint</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Due Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let t of backlogTasks">
+                <td class="task-title-cell">
+                  <a [routerLink]="['/tasks']" [queryParams]="{search: t.title}">{{ t.title }}</a>
+                </td>
+                <td>
+                  <div *ngIf="t.assignedToName" class="table-user">
+                    <app-avatar [name]="t.assignedToName" [src]="t.assignedToAvatar" size="sm"></app-avatar>
+                    <span>{{ t.assignedToName }}</span>
+                  </div>
+                  <span *ngIf="!t.assignedToName" class="text-muted">Unassigned</span>
+                </td>
+                <td>{{ t.sprintName || 'Backlog' }}</td>
+                <td><app-badge [label]="t.priority" type="priority"></app-badge></td>
+                <td><app-badge [label]="t.status" type="task-status"></app-badge></td>
+                <td>{{ t.dueDate ? (t.dueDate | date:'mediumDate') : 'No due date' }}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <app-empty-state 
+            *ngIf="backlogTasks.length === 0" 
+            icon="checklist"
+            title="Backlog is empty"
+            description="Create your first task to start building the sprint pipeline."
+            actionLabel="Create Task"
+            actionIcon="add"
+            (action)="openCreateTaskDialog()">
+          </app-empty-state>
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- 4. SPRINTS TAB -->
+    <mat-tab label="Sprints">
+      <div class="tab-content sprints-tab">
+        <div class="board-top-actions">
+          <span>Manage sprint timelines and objectives</span>
+          <button mat-raised-button color="primary" (click)="openCreateSprintDialog()">
+            <mat-icon>add</mat-icon> New Sprint
+          </button>
+        </div>
+
+        <div class="sprints-grid">
+          <mat-card *ngFor="let s of sprints" class="sprint-card glass-panel">
+            <div class="sprint-header">
+              <div class="meta">
+                <h4>{{ s.name }}</h4>
+                <span class="dates">{{ s.startDate | date:'shortDate' }} - {{ s.endDate | date:'shortDate' }}</span>
+              </div>
+              <app-badge [label]="s.status" type="sprint-status"></app-badge>
+            </div>
+
+            <p class="goal" *ngIf="s.goal"><strong>Goal:</strong> {{ s.goal }}</p>
+
+            <div class="sprint-footer">
+              <a mat-button color="primary" routerLink="/sprints" [queryParams]="{sprintId: s.id}">View Burndown</a>
+              
+              <div class="actions" *ngIf="authService.isManager()">
+                <button 
+                  *ngIf="s.status === 'PLANNED'" 
+                  mat-raised-button 
+                  color="primary" 
+                  (click)="startSprint(s.id)">
+                  Start Sprint
+                </button>
+                <button 
+                  *ngIf="s.status === 'ACTIVE'" 
+                  mat-raised-button 
+                  color="accent" 
+                  (click)="completeSprint(s.id)">
+                  Complete Sprint
+                </button>
+              </div>
+            </div>
+          </mat-card>
+
+          <app-empty-state 
+            *ngIf="sprints.length === 0" 
+            icon="calendar_today"
+            title="No Sprints Configured"
+            description="Create a sprint to group upcoming deliverables into actionable cycles."
+            actionLabel="Create Sprint"
+            actionIcon="add"
+            (action)="openCreateSprintDialog()">
+          </app-empty-state>
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- 5. MEMBERS TAB -->
+    <mat-tab label="Project Team">
+      <div class="tab-content members-tab">
+        <div class="board-top-actions">
+          <span>Configure contributor lists and viewer roles</span>
+          <button 
+            *ngIf="authService.isManager()" 
+            mat-raised-button 
+            color="primary" 
+            (click)="openAssignMemberDialog()">
+            <mat-icon>person_add</mat-icon> Assign Member
+          </button>
+        </div>
+
+        <div class="members-management-list">
+          <div *ngFor="let m of detail?.members" class="management-member-item glass-panel">
+            <app-avatar [name]="m.userName" [src]="m.userAvatar" size="md"></app-avatar>
+            <div class="details">
+              <span class="name">{{ m.userName }}</span>
+              <span class="email">{{ m.userEmail }}</span>
+            </div>
+            
+            <div class="role-pills">
+              <app-badge [label]="m.role" type="status"></app-badge>
+            </div>
+
+            <div class="actions" *ngIf="authService.isManager() && m.role !== 'OWNER'">
+              <button mat-icon-button color="warn" (click)="removeMember(m.userId)" title="Remove Member">
+                <mat-icon>person_remove</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>
+
+<!-- Skeleton Loading fallback -->
+<div *ngIf="loading" class="detail-loading">
+  <div class="skeleton" style="height: 180px; margin-bottom: 24px;"></div>
+  <div class="skeleton" style="height: 50px; margin-bottom: 24px;"></div>
+  <div class="skeleton" style="height: 400px;"></div>
+</div>

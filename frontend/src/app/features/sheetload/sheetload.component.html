@@ -1,0 +1,427 @@
+<div class="sheetload-container animate-fade-in">
+  <!-- Header Section -->
+  <div class="sheetload-header">
+    <div class="header-content">
+      <h1 class="display-title">SheetLoad</h1>
+      <p class="subtitle-text">Engineered bulk spreadsheet import wizard for enterprise-grade ingestion.</p>
+    </div>
+    
+    <!-- Custom Wizard Stepper Navigation -->
+    <div class="stepper-nav">
+      <div class="step-indicator" [class.active]="currentStep >= 1" [class.completed]="currentStep > 1">
+        <span class="step-num">1</span>
+        <span class="step-label">Select Template</span>
+      </div>
+      <div class="step-connector" [class.active]="currentStep > 1"></div>
+      
+      <div class="step-indicator" [class.active]="currentStep >= 2" [class.completed]="currentStep > 2">
+        <span class="step-num">2</span>
+        <span class="step-label">Upload & Preview</span>
+      </div>
+      <div class="step-connector" [class.active]="currentStep > 2"></div>
+      
+      <div class="step-indicator" [class.active]="currentStep >= 3" [class.completed]="currentStep > 3">
+        <span class="step-num">3</span>
+        <span class="step-label">Validation Report</span>
+      </div>
+      <div class="step-connector" [class.active]="currentStep > 3"></div>
+      
+      <div class="step-indicator" [class.active]="currentStep >= 4" [class.completed]="currentStep > 4">
+        <span class="step-num">4</span>
+        <span class="step-label">Confirm Ingestion</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Wizard Content Sheets -->
+  <div class="sheetload-content card-base">
+    
+    <!-- STEP 1: SELECT IMPORT TEMPLATE -->
+    <div *ngIf="currentStep === 1" class="step-content animate-slide-in">
+      <h2 class="step-title">Select Import Model</h2>
+      <p class="step-desc">Choose the target ingestion profile. Each profile bundles live relational validation dropdowns to minimize upload failures.</p>
+      
+      <div class="template-grid">
+        <!-- Projects Selection Card -->
+        <div class="template-card" 
+             [class.selected]="selectedType === 'projects'" 
+             (click)="selectImportType('projects')">
+          <div class="template-icon">
+            <mat-icon>folder_open</mat-icon>
+          </div>
+          <h3 class="template-title">Projects Directory</h3>
+          <p class="template-meta">Bulk provision workspace directories</p>
+          <ul class="template-columns-list">
+            <li><mat-icon class="col-dot">check_circle</mat-icon> Project Name *</li>
+            <li><mat-icon class="col-dot">check_circle</mat-icon> Description</li>
+            <li><mat-icon class="col-dot">check_circle</mat-icon> Priority (LOW / CRITICAL) *</li>
+            <li><mat-icon class="col-dot">check_circle</mat-icon> Status *</li>
+            <li><mat-icon class="col-dot">check_circle</mat-icon> Start & Due Dates *</li>
+          </ul>
+        </div>
+
+        <!-- Tasks Selection Card -->
+        <div class="template-card" 
+             [class.selected]="selectedType === 'tasks'" 
+             (click)="selectImportType('tasks')">
+          <div class="template-icon">
+            <mat-icon>assignment</mat-icon>
+          </div>
+          <h3 class="template-title">Tasks Directory</h3>
+          <p class="template-meta">Bulk inject tickets and sprint items</p>
+          <ul class="template-columns-list">
+            <li><mat-icon class="col-dot">check_circle</mat-icon> Project Name Reference *</li>
+            <li><mat-icon class="col-dot">check_circle</mat-icon> Task Title *</li>
+            <li><mat-icon class="col-dot">check_circle</mat-icon> Priority & Status *</li>
+            <li><mat-icon class="col-dot">check_circle</mat-icon> Assigned Member Email</li>
+            <li><mat-icon class="col-dot">check_circle</mat-icon> Sprint Name Assignment</li>
+            <li><mat-icon class="col-dot">check_circle</mat-icon> Due Date *</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="step-footer">
+        <button class="btn-download" (click)="downloadTemplate()" *ngIf="selectedType">
+          <mat-icon>download</mat-icon>
+          <span>Download {{ selectedType | titlecase }} Template</span>
+          <span class="btn-sub">Fresh DB relational lists injected • .xlsx</span>
+        </button>
+        
+        <div class="footer-nav">
+          <button class="btn-secondary" (click)="navigateToHome()">Cancel</button>
+          <button class="btn-primary" [disabled]="!selectedType" (click)="nextToUpload()">
+            <span>Continue to Upload</span>
+            <mat-icon>arrow_forward</mat-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: UPLOAD & PREVIEW -->
+    <div *ngIf="currentStep === 2" class="step-content animate-slide-in">
+      <h2 class="step-title">Upload Ingestion Spreadsheet</h2>
+      <p class="step-desc">Upload the completed template spreadsheet. The system will perform pre-validation checks instantly.</p>
+      
+      <!-- Drag and Drop Box -->
+      <div class="upload-zone" 
+           [class.dragover]="isDragOver"
+           (dragover)="onDragOver($event)"
+           (dragleave)="onDragLeave($event)"
+           (drop)="onDrop($event)"
+           (click)="fileInput.click()">
+        
+        <input type="file" #fileInput (change)="onFileSelected($event)" accept=".xlsx, .xls" class="hidden-file-input">
+        
+        <div class="upload-zone-content">
+          <div class="upload-icon-circle">
+            <mat-icon>cloud_upload</mat-icon>
+          </div>
+          <h3>Drag & drop Excel sheet here</h3>
+          <p class="upload-formats">or click to browse local files (.xlsx, .xls supported)</p>
+        </div>
+      </div>
+
+      <!-- File Preview metadata -->
+      <div *ngIf="selectedFile" class="file-preview-container animate-fade-in">
+        <div class="file-info-header">
+          <div class="file-details">
+            <mat-icon class="excel-icon">table_chart</mat-icon>
+            <div class="name-size">
+              <span class="file-name">{{ selectedFile.name }}</span>
+              <span class="file-size">{{ selectedFile.size | fileSize }}</span>
+            </div>
+          </div>
+          <button class="btn-text-danger" (click)="selectedFile = null; localPreview = null;">
+            <mat-icon>delete</mat-icon>
+            Remove
+          </button>
+        </div>
+
+        <!-- Local preview parsing results -->
+        <div *ngIf="localPreview" class="preview-metrics card-base">
+          <div class="metric-row">
+            <div class="metric-item">
+              <span class="metric-label">Target Sheet</span>
+              <span class="metric-val">{{ localPreview.sheetName }}</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Columns Count</span>
+              <span class="metric-val">{{ localPreview.colsCount }}</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Rows Count</span>
+              <span class="metric-val">{{ localPreview.rowsCount }}</span>
+            </div>
+          </div>
+
+          <div class="preview-headers-section">
+            <span class="headers-title">Detected Columns:</span>
+            <div class="pill-group">
+              <span class="column-pill" *ngFor="let col of localPreview.columns">{{ col }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- In-Flight Validation Overlay -->
+      <div *ngIf="isValidating" class="validation-progress-overlay animate-fade-in">
+        <div class="loader-content">
+          <div class="pulsing-circle"></div>
+          <h3>Validating Spreadsheet Entities</h3>
+          <p>Resolving database references and testing logical constraints...</p>
+        </div>
+      </div>
+
+      <!-- Ingestion actions -->
+      <div class="step-footer">
+        <div class="footer-nav">
+          <button class="btn-secondary" (click)="prevStep()">
+            <mat-icon>arrow_back</mat-icon>
+            <span>Back</span>
+          </button>
+          <button class="btn-primary" [disabled]="!selectedFile || isValidating" (click)="triggerValidation()">
+            <mat-icon>rule</mat-icon>
+            <span>Validate Spreadsheet</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: VALIDATION REPORT -->
+    <div *ngIf="currentStep === 3 && validationReport" class="step-content animate-slide-in">
+      <h2 class="step-title">Ingestion Validation Report</h2>
+      <p class="step-desc">Audit metrics compiled. Critical errors must be resolved to proceed. Warnings will be saved as non-blocking logs.</p>
+
+      <!-- Dashboard metrics summary row -->
+      <div class="report-summary-row">
+        <div class="report-summary-card valid">
+          <span class="summary-val">{{ validationReport.summary.validCount }}</span>
+          <span class="summary-lbl">Valid Rows Compiled</span>
+        </div>
+        <div class="report-summary-card error" [class.has-errors]="validationReport.summary.invalidCount > 0">
+          <span class="summary-val">{{ validationReport.summary.invalidCount }}</span>
+          <span class="summary-lbl">Logical Failures</span>
+        </div>
+        <div class="report-summary-card warning" [class.has-warnings]="validationReport.warnings.length > 0">
+          <span class="summary-val">{{ validationReport.warnings.length }}</span>
+          <span class="summary-lbl">Relational Warnings</span>
+        </div>
+      </div>
+
+      <!-- Error blocker callout -->
+      <div *ngIf="validationReport.summary.invalidCount > 0" class="error-blocker-callout">
+        <mat-icon>warning</mat-icon>
+        <div class="blocker-text">
+          <strong>Ingestion Blocked:</strong> Spreadsheet contains validation failures. You must correct these cells. Click <strong>Download Error Report</strong> below to fetch an annotated version with comments pinpointing errors.
+        </div>
+      </div>
+
+      <!-- Tab View of Excel Validation -->
+      <div class="tabs-container">
+        <mat-tab-group animationDuration="250ms">
+          <!-- TAB 1: VALID ROWS -->
+          <mat-tab>
+            <ng-template mat-tab-label>
+              <div class="tab-label-custom">
+                <mat-icon class="icon-success">check_circle_outline</mat-icon>
+                <span>Valid Entries</span>
+                <span class="tab-count-badge success">{{ validationReport.summary.validCount }}</span>
+              </div>
+            </ng-template>
+
+            <div class="tab-body-pane">
+              <div *ngIf="validationReport.validRows.length === 0" class="empty-tab-state">
+                <mat-icon>error_outline</mat-icon>
+                <p>No valid rows found in the uploaded file.</p>
+              </div>
+
+              <div *ngIf="validationReport.validRows.length > 0" class="table-scroll-wrapper">
+                <table class="report-table">
+                  <thead>
+                    <tr *ngIf="selectedType === 'projects'">
+                      <th>Project Name</th>
+                      <th>Description</th>
+                      <th>Priority</th>
+                      <th>Status</th>
+                      <th>Timeline</th>
+                    </tr>
+                    <tr *ngIf="selectedType === 'tasks'">
+                      <th>Project Reference</th>
+                      <th>Task Title</th>
+                      <th>Priority</th>
+                      <th>Status</th>
+                      <th>Assigned Member</th>
+                      <th>Sprint Reference</th>
+                      <th>Due Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let row of validationReport.validRows">
+                      <!-- Project template view -->
+                      <ng-container *ngIf="selectedType === 'projects'">
+                        <td class="bold-text">{{ row.name }}</td>
+                        <td class="muted-text-cell">{{ row.description || '-' }}</td>
+                        <td>
+                          <span class="badge" [ngClass]="row.priority | statusClass">{{ row.priority }}</span>
+                        </td>
+                        <td>
+                          <span class="badge" [ngClass]="row.status | statusClass">{{ row.status }}</span>
+                        </td>
+                        <td class="date-cell">{{ row.startDate }} • {{ row.dueDate }}</td>
+                      </ng-container>
+
+                      <!-- Task template view -->
+                      <ng-container *ngIf="selectedType === 'tasks'">
+                        <td class="ref-text">{{ row.projectName }}</td>
+                        <td class="bold-text">{{ row.title }}</td>
+                        <td>
+                          <span class="badge" [ngClass]="row.priority | statusClass">{{ row.priority }}</span>
+                        </td>
+                        <td>
+                          <span class="badge" [ngClass]="row.status | statusClass">{{ row.status }}</span>
+                        </td>
+                        <td class="assignee-cell">{{ row.assignedToName || 'Unassigned' }}</td>
+                        <td class="ref-text">{{ row.sprintName || 'Backlog' }}</td>
+                        <td class="date-cell">{{ row.dueDate }}</td>
+                      </ng-container>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </mat-tab>
+
+          <!-- TAB 2: INVALID ROWS -->
+          <mat-tab>
+            <ng-template mat-tab-label>
+              <div class="tab-label-custom">
+                <mat-icon class="icon-danger">error_outline</mat-icon>
+                <span>Failures</span>
+                <span class="tab-count-badge danger">{{ validationReport.summary.invalidCount }}</span>
+              </div>
+            </ng-template>
+
+            <div class="tab-body-pane">
+              <div *ngIf="validationReport.invalidRows.length === 0" class="empty-tab-state success-state">
+                <mat-icon>verified</mat-icon>
+                <h3>Clean Validation</h3>
+                <p>Zero cell errors. Ready for database submission.</p>
+              </div>
+
+              <div *ngIf="validationReport.invalidRows.length > 0" class="error-rows-list">
+                <div class="error-item-card" *ngFor="let err of validationReport.invalidRows">
+                  <div class="error-item-head">
+                    <span class="error-row-number">Row {{ err.row }}</span>
+                    <span class="error-column-name">{{ err.column }}</span>
+                  </div>
+                  <div class="error-value-issue">
+                    <div class="value-box">
+                      <span class="value-lbl">Uploaded Value:</span>
+                      <code class="value-val">{{ err.value !== '' ? err.value : '(Empty Cell)' }}</code>
+                    </div>
+                    <div class="issue-box">
+                      <mat-icon>cancel</mat-icon>
+                      <span class="issue-msg">{{ err.message }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </mat-tab>
+
+          <!-- TAB 3: SYSTEM WARNINGS -->
+          <mat-tab>
+            <ng-template mat-tab-label>
+              <div class="tab-label-custom">
+                <mat-icon class="icon-warning">report_problem</mat-icon>
+                <span>Warnings</span>
+                <span class="tab-count-badge warning">{{ validationReport.warnings.length }}</span>
+              </div>
+            </ng-template>
+
+            <div class="tab-body-pane">
+              <div *ngIf="validationReport.warnings.length === 0" class="empty-tab-state">
+                <mat-icon>verified_user</mat-icon>
+                <p>No warnings flags raised.</p>
+              </div>
+
+              <div *ngIf="validationReport.warnings.length > 0" class="warning-rows-list">
+                <div class="warning-item-box" *ngFor="let warn of validationReport.warnings">
+                  <mat-icon>info</mat-icon>
+                  <p class="warn-msg">{{ warn }}</p>
+                </div>
+              </div>
+            </div>
+          </mat-tab>
+        </mat-tab-group>
+      </div>
+
+      <!-- Action Stepper Footer -->
+      <div class="step-footer">
+        <button class="btn-error-download" *ngIf="validationReport.summary.invalidCount > 0" (click)="downloadErrorReport()">
+          <mat-icon>feedback</mat-icon>
+          <span>Download Error Report</span>
+          <span class="btn-sub">Excel sheet with comments on invalid cells</span>
+        </button>
+
+        <div class="footer-nav">
+          <button class="btn-secondary" (click)="prevStep()" [disabled]="isConfirming">
+            <mat-icon>arrow_back</mat-icon>
+            <span>Back</span>
+          </button>
+          <button class="btn-primary btn-success" 
+                  [disabled]="validationReport.summary.invalidCount > 0 || validationReport.summary.validCount === 0 || isConfirming"
+                  (click)="confirmImport()">
+            <mat-icon *ngIf="!isConfirming">cloud_done</mat-icon>
+            <div *ngIf="isConfirming" class="spinner-small"></div>
+            <span>{{ isConfirming ? 'Importing Ingests...' : 'Confirm & Ingest ' + validationReport.summary.validCount + ' Records' }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4: CONFIRM INGESTION (SUCCESS REPORT) -->
+    <div *ngIf="currentStep === 4" class="step-content success-step-view animate-slide-in">
+      
+      <!-- CSS Animated Luxury Success Checkmark -->
+      <div class="success-animation-container">
+        <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+          <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
+          <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+        </svg>
+      </div>
+
+      <h2 class="step-title align-center">Data Ingest Complete</h2>
+      <p class="step-desc align-center">All records have been committed to PostgreSQL. Target properties and metrics are computed. Activity log traces initialized.</p>
+
+      <div class="success-metrics-grid">
+        <div class="success-metric-card">
+          <span class="success-metric-label">Ingested Items</span>
+          <span class="success-metric-value">{{ importResultCount }}</span>
+        </div>
+        <div class="success-metric-card">
+          <span class="success-metric-label">Status</span>
+          <span class="success-metric-value text-success">Committed</span>
+        </div>
+        <div class="success-metric-card">
+          <span class="success-metric-label">Performer Log</span>
+          <span class="success-metric-value">Active User</span>
+        </div>
+      </div>
+
+      <!-- Action Stepper Footer -->
+      <div class="step-footer justify-center flex-gap">
+        <button class="btn-secondary" (click)="resetWizard()">
+          <mat-icon>replay</mat-icon>
+          <span>Ingest Another Sheet</span>
+        </button>
+        <button class="btn-primary" (click)="navigateToHome()">
+          <mat-icon>dashboard</mat-icon>
+          <span>Back to Projects</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>

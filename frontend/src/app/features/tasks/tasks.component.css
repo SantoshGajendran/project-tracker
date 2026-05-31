@@ -1,0 +1,231 @@
+.tasks-viewport {
+  width: 100%;
+  animation: fadeIn var(--duration-slow) var(--ease-out-expo);
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-xl);
+}
+
+.page-title {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 42px;
+  font-weight: 400;
+  line-height: 1.1;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+}
+
+.page-subtitle {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-top: var(--space-xs);
+  letter-spacing: 0.2px;
+}
+
+.create-btn {
+  background: var(--accent) !important;
+  color: var(--bg-surface) !important;
+  font-family: var(--font-body) !important;
+  font-weight: 500 !important;
+  border-radius: var(--radius-md) !important;
+  font-size: 13px !important;
+  height: 40px !important;
+}
+
+/* Filters Panel */
+.filters-card {
+  padding: var(--space-md) var(--space-lg);
+  margin-bottom: var(--space-xl);
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: var(--radius-lg) !important;
+}
+
+.filters-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  width: 100%;
+}
+
+.filter-field {
+  width: 150px;
+}
+
+.filter-field ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+  display: none !important;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  padding: 8px 16px;
+  width: 220px;
+  border: 1px solid var(--border-subtle);
+  height: 40px;
+  transition: border-color var(--duration-fast);
+}
+
+.search-box:focus-within {
+  border-color: var(--border-strong);
+}
+
+.search-box mat-icon {
+  color: var(--text-muted);
+  margin-right: 8px;
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.search-box input {
+  border: none;
+  background: transparent;
+  outline: none;
+  color: var(--text-primary);
+  width: 100%;
+  font-size: 13px;
+  font-family: var(--font-body);
+}
+
+.flex-grow-1 { flex-grow: 1; }
+.flex-grow-2 { flex-grow: 1.5; }
+
+/* Table Section */
+.table-card {
+  border-radius: var(--radius-lg) !important;
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-subtle) !important;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(9, 9, 11, 0.02) !important;
+}
+
+.tasks-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tasks-table th {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+  text-align: left;
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 1px solid var(--border-subtle);
+  background-color: var(--bg-elevated);
+}
+
+.tasks-table td {
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 13.5px;
+  color: var(--text-secondary);
+}
+
+.tasks-table tr {
+  transition: background-color var(--duration-fast);
+}
+
+.tasks-table tr:hover {
+  background-color: var(--bg-elevated);
+}
+
+.tasks-table tr.overdue-row {
+  background-color: rgba(220, 38, 38, 0.02);
+}
+
+.tasks-table tr.overdue-row:hover {
+  background-color: rgba(220, 38, 38, 0.04);
+}
+
+.title-cell-content {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.overdue-icon {
+  color: var(--status-danger);
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+.proj-link {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color var(--duration-fast);
+}
+
+.proj-link:hover {
+  color: var(--accent);
+}
+
+.table-user {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--text-primary);
+}
+
+.unassigned-text {
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 12.5px;
+}
+
+.date-cell {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+}
+
+.date-cell.overdue {
+  color: var(--status-danger);
+  font-weight: 500;
+}
+
+.status-dropdown {
+  width: 120px;
+}
+
+.actions-cell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.skeleton-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+/* Material overrides for forms inside filters */
+.filters-card ::ng-deep .mat-mdc-text-field-wrapper {
+  padding: 0 12px !important;
+  background-color: transparent !important;
+}
+.filters-card ::ng-deep .mat-mdc-form-field-flex {
+  align-items: center !important;
+  height: 38px !important;
+}
+.filters-card ::ng-deep .mat-mdc-form-field-infix {
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+  min-height: unset !important;
+}

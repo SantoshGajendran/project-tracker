@@ -1,0 +1,181 @@
+<div class="dashboard-viewport">
+  <div class="page-header">
+    <h1 class="page-title">Welcome back, {{ authService.currentUser()?.name || 'Operator' }}</h1>
+    <p class="page-subtitle">Workspace Overview &bull; {{ todayDate | date:'fullDate' }}</p>
+  </div>
+
+  <!-- Loading Skeleton -->
+  <div *ngIf="loading" class="skeleton-container">
+    <div class="kpi-grid">
+      <div class="kpi-card skeleton" style="height: 120px;"></div>
+      <div class="kpi-card skeleton" style="height: 120px;"></div>
+      <div class="kpi-card skeleton" style="height: 120px;"></div>
+      <div class="kpi-card skeleton" style="height: 120px;"></div>
+    </div>
+    <div class="charts-grid">
+      <div class="chart-card skeleton" style="height: 300px;"></div>
+      <div class="chart-card skeleton" style="height: 300px;"></div>
+    </div>
+  </div>
+
+  <div *ngIf="!loading" class="dashboard-content">
+    <!-- KPI Row -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">Active Projects</span>
+          <mat-icon class="kpi-icon">folder</mat-icon>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-value">{{ summary?.projectsByStatus?.['IN_PROGRESS'] || 0 }}</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">Tasks In Progress</span>
+          <mat-icon class="kpi-icon">playlist_add_check</mat-icon>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-value">{{ summary?.tasksByStatus?.['IN_PROGRESS'] || 0 }}</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">Overdue Tasks</span>
+          <mat-icon class="kpi-icon" [style.color]="(summary?.overdueCount || 0) > 0 ? 'var(--status-danger)' : 'var(--text-muted)'">warning</mat-icon>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-value" [style.color]="(summary?.overdueCount || 0) > 0 ? 'var(--status-danger)' : 'inherit'">{{ summary?.overdueCount || 0 }}</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">Team Members</span>
+          <mat-icon class="kpi-icon">group</mat-icon>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-value">{{ getMemberCount() }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>Project Status Distribution</h3>
+        <div class="chart-container">
+          <canvas #statusCanvas></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <h3>Team Workload (Active Tasks)</h3>
+        <div class="chart-container">
+          <canvas #workloadCanvas></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tables/Feeds Row -->
+    <div class="bottom-grid">
+      <!-- Project Health -->
+      <div class="bottom-card">
+        <h3>Project Health Status</h3>
+        <div class="health-table-wrapper">
+          <table *ngIf="health.length > 0" class="health-table">
+            <thead>
+              <tr>
+                <th>Project Name</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Progress</th>
+                <th>Due In</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let p of health">
+                <td class="proj-name">
+                  <div class="name-cell">
+                    {{ p.name }}
+                    <span *ngIf="p.riskFlag" class="risk-badge">AT RISK</span>
+                  </div>
+                </td>
+                <td><app-badge [label]="p.priority" type="priority"></app-badge></td>
+                <td><app-badge [label]="p.status" type="status"></app-badge></td>
+                <td style="width: 120px;">
+                  <app-progress-bar [value]="p.progress" [showLabel]="true"></app-progress-bar>
+                </td>
+                <td class="days-cell" [ngClass]="{'overdue': p.daysRemaining < 0, 'imminent': p.daysRemaining >= 0 && p.daysRemaining < 7}">
+                  {{ p.daysRemaining >= 0 ? p.daysRemaining + 'd' : 'Overdue' }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div *ngIf="health.length === 0" class="empty-embed">
+            <p>No active projects tracked.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Activity Feed -->
+      <div class="bottom-card">
+        <h3>Recent Activities</h3>
+        <div class="activity-feed-wrapper">
+          <div *ngIf="activities.length > 0" class="activity-list">
+            <div *ngFor="let act of activities" class="activity-item">
+              <app-avatar [name]="act.performedByName || 'System'" size="sm"></app-avatar>
+              <div class="activity-details">
+                <p class="desc">
+                  <strong>{{ act.performedByName || 'System' }}</strong> {{ act.description }}
+                </p>
+                <span class="time">{{ act.timestamp | date:'shortTime' }} &bull; {{ act.timestamp | date:'mediumDate' }}</span>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="activities.length === 0" class="empty-embed">
+            <p>No recent activity recorded.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- My Tasks Today -->
+    <div class="my-tasks-card">
+      <h3>My Scheduled Tasks Today</h3>
+      <div class="my-tasks-list">
+        <table *ngIf="myTasks.length > 0" class="my-tasks-table">
+          <thead>
+            <tr>
+              <th>Task Title</th>
+              <th>Project</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th>Due Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let t of myTasks">
+              <td class="task-title-cell">
+                <a [routerLink]="['/tasks']" [queryParams]="{search: t.title}">{{ t.title }}</a>
+              </td>
+              <td>{{ t.projectName }}</td>
+              <td><app-badge [label]="t.priority" type="priority"></app-badge></td>
+              <td><app-badge [label]="t.status" type="task-status"></app-badge></td>
+              <td class="dueDate-cell" [ngClass]="{'overdue': t.dueDate && t.status !== 'DONE'}">
+                {{ t.dueDate ? (t.dueDate | date:'mediumDate') : 'No date' }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div *ngIf="myTasks.length === 0" class="empty-embed">
+          <p>No tasks assigned for today. Enjoy your day!</p>
+          <a class="btn-ghost" routerLink="/tasks">View All Tasks</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

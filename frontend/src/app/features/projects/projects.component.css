@@ -1,0 +1,421 @@
+.projects-viewport {
+  width: 100%;
+  animation: fadeIn var(--duration-slow) var(--ease-out-expo);
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-xl);
+}
+
+.page-title {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 42px;
+  font-weight: 400;
+  line-height: 1.1;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+}
+
+.page-subtitle {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-top: var(--space-xs);
+  letter-spacing: 0.2px;
+}
+
+.create-btn {
+  background: var(--accent) !important;
+  color: var(--bg-void) !important;
+  font-family: var(--font-body) !important;
+  font-weight: 500 !important;
+  border-radius: var(--radius-md) !important;
+  font-size: 13px !important;
+  height: 40px !important;
+}
+
+.header-actions {
+  display: flex;
+  gap: var(--space-md);
+  align-items: center;
+}
+
+.bulk-import-btn {
+  border: 1px solid var(--border-strong) !important;
+  color: var(--text-secondary) !important;
+  font-family: var(--font-body) !important;
+  font-weight: 500 !important;
+  border-radius: var(--radius-md) !important;
+  font-size: 13px !important;
+  height: 40px !important;
+  display: inline-flex !important;
+  align-items: center;
+  gap: var(--space-xs);
+  background: transparent !important;
+  text-decoration: none;
+  line-height: 38px !important;
+}
+
+.bulk-import-btn:hover {
+  background: var(--bg-elevated) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--text-secondary) !important;
+}
+
+.bulk-import-btn mat-icon {
+  margin-right: 4px;
+}
+
+/* Filters Panel */
+.filters-card {
+  padding: var(--space-md) var(--space-lg);
+  margin-bottom: var(--space-xl);
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: var(--radius-lg) !important;
+}
+
+.filters-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.filter-field {
+  width: 160px;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  padding: 8px 16px;
+  width: 240px;
+  border: 1px solid var(--border-subtle);
+  height: 40px;
+  transition: border-color var(--duration-fast);
+}
+
+.search-box:focus-within {
+  border-color: var(--border-strong);
+}
+
+.search-box mat-icon {
+  color: var(--text-muted);
+  margin-right: 8px;
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.search-box input {
+  border: none;
+  background: transparent;
+  outline: none;
+  color: var(--text-primary);
+  width: 100%;
+  font-size: 13px;
+  font-family: var(--font-body);
+}
+
+.toggle-group {
+  display: flex;
+  background-color: var(--bg-elevated);
+  padding: 4px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+}
+
+.toggle-group button {
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  padding: 4px 12px;
+  font-family: var(--font-body);
+  transition: all var(--duration-fast);
+}
+
+.toggle-group button.active-mode {
+  background-color: var(--bg-surface) !important;
+  color: var(--text-accent);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+/* Projects Grid */
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-md);
+}
+
+.project-card {
+  padding: var(--space-lg);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  height: 240px;
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: var(--radius-lg) !important;
+  transition: transform var(--duration-base) var(--ease-out-expo), border-color var(--duration-base), box-shadow var(--duration-base);
+  animation: slideInUp 0.4s var(--ease-out-expo) both;
+}
+
+.project-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--border-strong) !important;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4) !important;
+}
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-md);
+}
+
+.at-risk-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--status-danger);
+  background: rgba(252, 129, 129, 0.08);
+  border: 1px solid rgba(252, 129, 129, 0.2);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.5px;
+}
+
+.at-risk-label mat-icon {
+  font-size: 11px;
+  width: 11px;
+  height: 11px;
+}
+
+.card-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.card-main h3 {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+}
+
+.card-main .description {
+  font-size: 13px;
+  color: var(--text-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.5;
+}
+
+.card-progress {
+  margin-bottom: var(--space-md);
+}
+
+.prog-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: var(--space-xs);
+  font-family: var(--font-mono);
+}
+
+.prog-meta .pct {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.card-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: var(--space-sm);
+}
+
+.card-bottom .due {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-family: var(--font-mono);
+}
+
+.card-bottom .due mat-icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+}
+
+/* Kanban Board styles */
+.kanban-board {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-md);
+  align-items: start;
+}
+
+@media (max-width: 1200px) {
+  .kanban-board {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .kanban-board {
+    grid-template-columns: 1fr;
+  }
+}
+
+.kanban-column {
+  padding: var(--space-md);
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: var(--radius-lg) !important;
+  min-height: 550px;
+  display: flex;
+  flex-direction: column;
+}
+
+.column-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-md);
+  padding: 0 var(--space-xs) var(--space-xs) var(--space-xs);
+  border-bottom: 2px solid var(--border-subtle);
+}
+
+.kanban-column:nth-child(1) .column-header { border-bottom-color: var(--status-planning); }
+.kanban-column:nth-child(2) .column-header { border-bottom-color: var(--status-active); }
+.kanban-column:nth-child(3) .column-header { border-bottom-color: var(--status-hold); }
+.kanban-column:nth-child(4) .column-header { border-bottom-color: var(--status-done); }
+
+.column-header h4 {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.column-header .count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  background: var(--bg-elevated);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+}
+
+.column-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  flex: 1;
+}
+
+.kanban-project-card {
+  padding: var(--space-md);
+  cursor: pointer;
+  background: var(--bg-base) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: var(--radius-md) !important;
+  transition: transform var(--duration-base) var(--ease-out-expo), border-color var(--duration-base);
+}
+
+.kanban-project-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-strong) !important;
+}
+
+.kanban-project-card h5 {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: var(--space-xs) 0;
+  font-family: var(--font-body);
+}
+
+.at-risk-mini {
+  color: var(--status-danger);
+}
+
+.at-risk-mini mat-icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+}
+
+.kanban-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.kanban-empty {
+  text-align: center;
+  padding: var(--space-xl) var(--space-md);
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-md);
+}
+
+.proj-skeleton {
+  height: 240px;
+}
+
+/* Overrides for Mat Form Fields inside layout */
+.filters-card ::ng-deep .mat-mdc-text-field-wrapper {
+  padding: 0 12px !important;
+  background-color: transparent !important;
+}
+.filters-card ::ng-deep .mat-mdc-form-field-flex {
+  align-items: center !important;
+  height: 38px !important;
+}
+.filters-card ::ng-deep .mat-mdc-form-field-infix {
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+  min-height: unset !important;
+}
+.filters-card ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+  display: none !important;
+}
