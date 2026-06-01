@@ -263,6 +263,36 @@ export class ProjectDetailComponent implements OnInit {
     });
   }
 
+  deleteProject(): void {
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '380px',
+      data: {
+        title: 'Delete Project',
+        message: 'Are you sure you want to delete this project? This action is permanent and will delete all associated tasks, sprints, and members.',
+        confirmText: 'Delete',
+        cancelText: 'Cancel'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.projectService.deleteProject(this.projectId).subscribe({
+          next: (res) => {
+            if (res.success) {
+              this.snackBar.open('Project deleted successfully', 'Close', { duration: 3000 });
+              this.router.navigate(['/projects']);
+            } else {
+              this.snackBar.open(res.message || 'Failed to delete project', 'Close', { duration: 3000 });
+            }
+          },
+          error: (err) => {
+            this.snackBar.open(err.error?.message || 'Error deleting project', 'Close', { duration: 3000 });
+          }
+        });
+      }
+    });
+  }
+
   // Sprint lifecycle
   startSprint(sprintId: number): void {
     this.sprintService.startSprint(sprintId).subscribe({

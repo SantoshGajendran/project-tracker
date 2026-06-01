@@ -27,4 +27,9 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
             @Param("priority") ProjectPriority priority,
             @Param("search") String search,
             Pageable pageable);
+
+    @Query("SELECT p.name FROM Project p")
+    List<String> findAllProjectNames();
+
+    boolean existsByNameIgnoreCase(String name);
 }

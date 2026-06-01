@@ -192,25 +192,56 @@
     <div *ngIf="currentStep === 3 && validationReport" class="step-content animate-slide-in">
       <h2 class="step-title">Ingestion Validation Report</h2>
       <p class="step-desc">Audit metrics compiled. Critical errors must be resolved to proceed. Warnings will be saved as non-blocking logs.</p>
+      <!-- Duplicate Banner -->
+      <div class="duplicate-banner animate-fade-in"
+           *ngIf="validationReport.intrasheetDuplicatesCount > 0 || validationReport.databaseDuplicatesCount > 0">
+        <div class="banner-icon">
+          <mat-icon>warning</mat-icon>
+        </div>
+        <div class="banner-body">
+          <p class="banner-title">Duplicates detected — these rows will be skipped</p>
+          <div class="banner-stats">
+            <span class="dupe-stat" *ngIf="validationReport.intrasheetDuplicatesCount > 0">
+              <mat-icon class="icon-small">file_copy</mat-icon>
+              {{ validationReport.intrasheetDuplicatesCount }} duplicate{{ validationReport.intrasheetDuplicatesCount > 1 ? 's' : '' }} within the sheet
+            </span>
+            <span class="dupe-divider" *ngIf="validationReport.intrasheetDuplicatesCount > 0 && validationReport.databaseDuplicatesCount > 0">·</span>
+            <span class="dupe-stat" *ngIf="validationReport.databaseDuplicatesCount > 0">
+              <mat-icon class="icon-small">storage</mat-icon>
+              {{ validationReport.databaseDuplicatesCount }} already exist{{ validationReport.databaseDuplicatesCount === 1 ? 's' : '' }} in workspace
+            </span>
+          </div>
+          <div class="dupe-names-strip">
+            <span class="dupe-name-pill" *ngFor="let name of validationReport.duplicateNames">
+              {{ name }}
+            </span>
+          </div>
+        </div>
+      </div>
 
       <!-- Dashboard metrics summary row -->
       <div class="report-summary-row">
         <div class="report-summary-card valid">
           <span class="summary-val">{{ validationReport.summary.validCount }}</span>
-          <span class="summary-lbl">Valid Rows Compiled</span>
+          <span class="summary-lbl">Ready to import</span>
         </div>
-        <div class="report-summary-card error" [class.has-errors]="validationReport.summary.invalidCount > 0">
-          <span class="summary-val">{{ validationReport.summary.invalidCount }}</span>
-          <span class="summary-lbl">Logical Failures</span>
+        <div class="report-summary-card duplicate"
+             *ngIf="validationReport.intrasheetDuplicatesCount + validationReport.databaseDuplicatesCount > 0">
+          <span class="summary-val">{{ validationReport.intrasheetDuplicatesCount + validationReport.databaseDuplicatesCount }}</span>
+          <span class="summary-lbl">Duplicates skipped</span>
+        </div>
+        <div class="report-summary-card error" [class.has-errors]="validationErrors.length > 0">
+          <span class="summary-val">{{ validationErrors.length }}</span>
+          <span class="summary-lbl">Validation errors</span>
         </div>
         <div class="report-summary-card warning" [class.has-warnings]="validationReport.warnings.length > 0">
           <span class="summary-val">{{ validationReport.warnings.length }}</span>
-          <span class="summary-lbl">Relational Warnings</span>
+          <span class="summary-lbl">Warnings</span>
         </div>
       </div>
 
       <!-- Error blocker callout -->
-      <div *ngIf="validationReport.summary.invalidCount > 0" class="error-blocker-callout">
+      <div *ngIf="validationErrors.length > 0" class="error-blocker-callout">
         <mat-icon>warning</mat-icon>
         <div class="blocker-text">
           <strong>Ingestion Blocked:</strong> Spreadsheet contains validation failures. You must correct these cells. Click <strong>Download Error Report</strong> below to fetch an annotated version with comments pinpointing errors.
@@ -292,28 +323,81 @@
             </div>
           </mat-tab>
 
-          <!-- TAB 2: INVALID ROWS -->
+          <!-- TAB 2: DUPLICATES TAB -->
+          <mat-tab *ngIf="validationReport.intrasheetDuplicatesCount + validationReport.databaseDuplicatesCount > 0">
+            <ng-template mat-tab-label>
+              <div class="tab-label-custom">
+                <mat-icon class="icon-warning">block</mat-icon>
+                <span>Duplicates</span>
+                <span class="tab-count-badge warning">{{ validationReport.intrasheetDuplicatesCount + validationReport.databaseDuplicatesCount }}</span>
+              </div>
+            </ng-template>
+
+            <div class="tab-body-pane">
+              <div class="duplicate-list">
+                <!-- Intra-sheet duplicates section -->
+                <div class="dupe-section" *ngIf="intrasheetDupes.length > 0">
+                  <p class="dupe-section-label">
+                    <mat-icon class="icon-small">file_copy</mat-icon>
+                    <span>Within-sheet duplicates</span>
+                    <span class="dupe-section-hint">First occurrence kept — these rows ignored</span>
+                  </p>
+                  <div class="dupe-item" *ngFor="let err of intrasheetDupes">
+                    <div class="dupe-item-left">
+                      <span class="mono row-num">Row {{ err.rowNumber }}</span>
+                      <span class="dupe-type-badge intra">In sheet</span>
+                    </div>
+                    <div class="dupe-item-right">
+                      <span class="dupe-value">{{ err.value }}</span>
+                      <span class="dupe-msg">{{ err.errorMessage }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Database duplicates section -->
+                <div class="dupe-section" *ngIf="dbDupes.length > 0">
+                  <p class="dupe-section-label">
+                    <mat-icon class="icon-small">storage</mat-icon>
+                    <span>Already exists in workspace</span>
+                    <span class="dupe-section-hint">These will not be re-imported</span>
+                  </p>
+                  <div class="dupe-item" *ngFor="let err of dbDupes">
+                    <div class="dupe-item-left">
+                      <span class="mono row-num">Row {{ err.rowNumber }}</span>
+                      <span class="dupe-type-badge db">In database</span>
+                    </div>
+                    <div class="dupe-item-right">
+                      <span class="dupe-value">{{ err.value }}</span>
+                      <span class="dupe-msg">{{ err.errorMessage }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </mat-tab>
+
+          <!-- TAB 3: FAILURES (INVALID ROWS) -->
           <mat-tab>
             <ng-template mat-tab-label>
               <div class="tab-label-custom">
                 <mat-icon class="icon-danger">error_outline</mat-icon>
                 <span>Failures</span>
-                <span class="tab-count-badge danger">{{ validationReport.summary.invalidCount }}</span>
+                <span class="tab-count-badge danger">{{ validationErrors.length }}</span>
               </div>
             </ng-template>
 
             <div class="tab-body-pane">
-              <div *ngIf="validationReport.invalidRows.length === 0" class="empty-tab-state success-state">
+              <div *ngIf="validationErrors.length === 0" class="empty-tab-state success-state">
                 <mat-icon>verified</mat-icon>
                 <h3>Clean Validation</h3>
                 <p>Zero cell errors. Ready for database submission.</p>
               </div>
 
-              <div *ngIf="validationReport.invalidRows.length > 0" class="error-rows-list">
-                <div class="error-item-card" *ngFor="let err of validationReport.invalidRows">
+              <div *ngIf="validationErrors.length > 0" class="error-rows-list">
+                <div class="error-item-card" *ngFor="let err of validationErrors">
                   <div class="error-item-head">
-                    <span class="error-row-number">Row {{ err.row }}</span>
-                    <span class="error-column-name">{{ err.column }}</span>
+                    <span class="error-row-number">Row {{ err.rowNumber }}</span>
+                    <span class="error-column-name">{{ err.columnName }}</span>
                   </div>
                   <div class="error-value-issue">
                     <div class="value-box">
@@ -322,7 +406,7 @@
                     </div>
                     <div class="issue-box">
                       <mat-icon>cancel</mat-icon>
-                      <span class="issue-msg">{{ err.message }}</span>
+                      <span class="issue-msg">{{ err.errorMessage }}</span>
                     </div>
                   </div>
                 </div>
@@ -330,7 +414,7 @@
             </div>
           </mat-tab>
 
-          <!-- TAB 3: SYSTEM WARNINGS -->
+          <!-- TAB 4: SYSTEM WARNINGS -->
           <mat-tab>
             <ng-template mat-tab-label>
               <div class="tab-label-custom">

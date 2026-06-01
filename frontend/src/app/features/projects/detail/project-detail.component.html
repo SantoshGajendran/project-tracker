@@ -1,8 +1,13 @@
 <div class="detail-viewport" *ngIf="!loading">
-  <!-- Back link -->
-  <a routerLink="/projects" class="back-link">
-    <mat-icon>arrow_back</mat-icon> Back to Projects Directory
-  </a>
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <a routerLink="/projects" class="back-link">
+      <mat-icon>arrow_back</mat-icon> Back to Projects Directory
+    </a>
+    <button *ngIf="authService.isManager()" mat-stroked-button (click)="deleteProject()" class="delete-project-btn">
+      <mat-icon>delete</mat-icon> Delete Project
+    </button>
+  </div>
 
   <!-- Project Header -->
   <div class="project-header glass-panel">

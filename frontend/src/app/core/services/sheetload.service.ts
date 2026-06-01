@@ -5,10 +5,11 @@ import { environment } from '../../../environments/environment';
 import * as XLSX from 'xlsx';
 
 export interface ImportError {
-  row: number;
-  column: string;
+  rowNumber: number;
+  columnName: string;
   value: string;
-  message: string;
+  errorMessage: string;
+  errorType: string;
 }
 
 export interface ImportValidationReport {
@@ -21,6 +22,9 @@ export interface ImportValidationReport {
     validCount: number;
     invalidCount: number;
   };
+  intrasheetDuplicatesCount: number;
+  databaseDuplicatesCount: number;
+  duplicateNames: string[];
 }
 
 @Injectable({
@@ -101,8 +105,8 @@ export class SheetLoadService {
           const worksheet = workbook.Sheets[firstSheetName];
           
           errors.forEach(err => {
-            const colIndex = this.getColIndex(err.column, isProject);
-            const cellRef = XLSX.utils.encode_cell({ r: err.row - 1, c: colIndex });
+            const colIndex = this.getColIndex(err.columnName, isProject);
+            const cellRef = XLSX.utils.encode_cell({ r: err.rowNumber - 1, c: colIndex });
             
             if (!worksheet[cellRef]) {
               worksheet[cellRef] = { t: 'z', v: '' };
@@ -115,16 +119,16 @@ export class SheetLoadService {
             }
             cell.c.push({
               a: 'System Validator',
-              t: `${err.column}: ${err.message} (Value: "${err.value || ''}")`
+              t: `${err.columnName}: ${err.errorMessage} (Value: "${err.value || ''}")`
             });
           });
 
           // 2. Add an "Errors Summary" sheet at the beginning
           const summaryData = errors.map(err => ({
-            'Row Number': err.row,
-            'Field / Column': err.column,
+            'Row Number': err.rowNumber,
+            'Field / Column': err.columnName,
             'Uploaded Value': err.value || '(Empty)',
-            'Error Detail': err.message
+            'Error Detail': err.errorMessage
           }));
           
           const summarySheet = XLSX.utils.json_to_sheet(summaryData);

@@ -985,3 +985,178 @@
 @keyframes spin-loop {
   to { transform: rotate(360deg); }
 }
+
+/* ─── DUPLICATES IMPORT STYLING ─── */
+
+/* Duplicate banner */
+.duplicate-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: rgba(217, 119, 6, 0.06);
+  border: 1px solid rgba(217, 119, 6, 0.2);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+
+.duplicate-banner .banner-icon {
+  font-size: 20px;
+  color: var(--status-warning);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.duplicate-banner .banner-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.duplicate-banner .banner-stats {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.duplicate-banner .dupe-stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--status-warning);
+}
+
+.duplicate-banner .dupe-divider {
+  color: var(--text-muted);
+}
+
+.duplicate-banner .dupe-names-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 64px;
+  overflow-y: auto;
+}
+
+.duplicate-banner .dupe-name-pill {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: rgba(217, 119, 6, 0.1);
+  border: 1px solid rgba(217, 119, 6, 0.2);
+  color: var(--status-warning);
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+}
+
+/* Summary tile — duplicate variant */
+.report-summary-card.duplicate {
+  border-left: 4px solid var(--status-warning);
+  background: rgba(217, 119, 6, 0.02);
+}
+
+.report-summary-card.duplicate .summary-val {
+  color: var(--status-warning);
+}
+
+/* Duplicate list */
+.duplicate-list {
+  padding: 16px 0;
+}
+
+.dupe-section {
+  margin-bottom: 24px;
+}
+
+.dupe-section .dupe-section-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.dupe-section .dupe-section-label .dupe-section-hint {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: none;
+  letter-spacing: 0;
+  margin-left: auto;
+}
+
+.dupe-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.dupe-item:last-child {
+  border-bottom: none;
+}
+
+.dupe-item-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.dupe-item-left .row-num {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.dupe-type-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+}
+
+.dupe-type-badge.intra {
+  background: rgba(217, 119, 6, 0.1);
+  color: var(--status-warning);
+  border: 1px solid rgba(217, 119, 6, 0.2);
+}
+
+.dupe-type-badge.db {
+  background: rgba(220, 38, 38, 0.1);
+  color: var(--status-danger);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+}
+
+.dupe-item-right {
+  flex: 1;
+}
+
+.dupe-item-right .dupe-value {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-primary);
+  display: block;
+  margin-bottom: 3px;
+}
+
+.dupe-item-right .dupe-msg {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.icon-small {
+  font-size: 16px !important;
+  width: 16px !important;
+  height: 16px !important;
+}

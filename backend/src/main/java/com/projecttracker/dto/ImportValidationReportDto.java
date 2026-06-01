@@ -24,4 +24,9 @@ public class ImportValidationReportDto {
     private List<String> warnings = new ArrayList<>();
     @Builder.Default
     private Map<String, Object> summary = new HashMap<>();
+
+    private int intrasheetDuplicatesCount;
+    private int databaseDuplicatesCount;
+    @Builder.Default
+    private List<String> duplicateNames = new ArrayList<>();
 }

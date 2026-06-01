@@ -28,6 +28,10 @@ public class ImportExecutionService {
         for (Object row : validRows) {
             ProjectDto dto = (ProjectDto) row;
 
+            if (projectRepository.existsByNameIgnoreCase(dto.getName().trim())) {
+                continue;
+            }
+
             Project project = new Project();
             project.setName(dto.getName());
             project.setDescription(dto.getDescription());
@@ -65,6 +69,10 @@ public class ImportExecutionService {
 
             Project project = projectRepository.findById(dto.getProjectId()).orElse(null);
             if (project == null) continue;
+
+            if (taskRepository.existsByTitleIgnoreCaseAndProject_NameIgnoreCase(dto.getTitle().trim(), project.getName().trim())) {
+                continue;
+            }
 
             User assignee = null;
             if (dto.getAssignedToId() != null) {

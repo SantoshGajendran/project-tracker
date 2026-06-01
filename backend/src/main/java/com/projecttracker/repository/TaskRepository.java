@@ -63,4 +63,9 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     @Query("SELECT COALESCE(SUM(t.storyPoints), 0) FROM Task t WHERE t.sprint.id = :sprintId")
     long sumTotalStoryPointsBySprintId(@Param("sprintId") Long sprintId);
+
+    @Query("SELECT t.title, p.name FROM Task t JOIN t.project p")
+    List<Object[]> findAllTitleAndProjectName();
+
+    boolean existsByTitleIgnoreCaseAndProject_NameIgnoreCase(String title, String projectName);
 }

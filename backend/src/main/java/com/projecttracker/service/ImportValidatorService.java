@@ -1,12 +1,14 @@
 package com.projecttracker.service;
 
 import com.projecttracker.dto.ImportErrorDto;
+import com.projecttracker.dto.ImportErrorType;
 import com.projecttracker.dto.ImportValidationReportDto;
 import com.projecttracker.dto.ProjectDto;
 import com.projecttracker.dto.TaskDto;
 import com.projecttracker.entity.*;
 import com.projecttracker.repository.ProjectRepository;
 import com.projecttracker.repository.SprintRepository;
+import com.projecttracker.repository.TaskRepository;
 import com.projecttracker.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
@@ -24,22 +26,90 @@ public class ImportValidatorService {
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
     private final SprintRepository sprintRepository;
+    private final TaskRepository taskRepository;
 
     public ImportValidationReportDto validateProjects(InputStream is) throws Exception {
         List<Object> validRows = new ArrayList<>();
         List<ImportErrorDto> invalidRows = new ArrayList<>();
         List<String> warnings = new ArrayList<>();
 
+        int intrasheetDuplicatesCount = 0;
+        int databaseDuplicatesCount = 0;
+        List<String> duplicateNames = new ArrayList<>();
+
         try (Workbook workbook = WorkbookFactory.create(is)) {
             Sheet sheet = workbook.getSheetAt(0);
             int rowCount = sheet.getLastRowNum();
 
+            // ── STEP 1: Detect intra-sheet duplicates ─────────────────────────────────
+            Map<String, List<Integer>> nameToRows = new LinkedHashMap<>();
+            for (int r = 1; r <= rowCount; r++) {
+                Row row = sheet.getRow(r);
+                if (row == null || isRowEmpty(row)) continue;
+                String name = getCellString(row.getCell(0));
+                if (org.springframework.util.StringUtils.hasText(name)) {
+                    String key = name.trim().toLowerCase();
+                    nameToRows.computeIfAbsent(key, k -> new ArrayList<>()).add(r + 1); // Row number (1-based)
+                }
+            }
+
+            Set<Integer> intraDuplicateRows = new HashSet<>();
+            nameToRows.forEach((name, rowNums) -> {
+                if (rowNums.size() > 1) {
+                    for (int idx = 1; idx < rowNums.size(); idx++) {
+                        intraDuplicateRows.add(rowNums.get(idx));
+                    }
+                }
+            });
+
+            // ── STEP 2: Detect database duplicates ────────────────────────────────────
+            Set<String> existingProjectNames = new java.util.HashSet<>();
+            for (String pName : projectRepository.findAllProjectNames()) {
+                if (pName != null) {
+                    existingProjectNames.add(pName.trim().toLowerCase());
+                }
+            }
+
+            // ── STEP 3: Validate rows ─────────────────────────────────────────────────
             for (int r = 1; r <= rowCount; r++) {
                 Row row = sheet.getRow(r);
                 if (row == null || isRowEmpty(row)) continue;
 
                 int rowNum = r + 1;
                 String name = getCellString(row.getCell(0));
+
+                // Check intra-sheet duplicate
+                if (intraDuplicateRows.contains(rowNum)) {
+                    invalidRows.add(ImportErrorDto.builder()
+                            .rowNumber(rowNum)
+                            .columnName("Project Name")
+                            .value(name)
+                            .errorMessage("Duplicate within sheet — '" + name + "' appears multiple times. Only the first occurrence will be considered.")
+                            .errorType(ImportErrorType.INTRA_SHEET_DUPLICATE)
+                            .build());
+                    intrasheetDuplicatesCount++;
+                    if (!duplicateNames.contains(name)) {
+                        duplicateNames.add(name);
+                    }
+                    continue;
+                }
+
+                // Check database duplicate
+                if (org.springframework.util.StringUtils.hasText(name) && existingProjectNames.contains(name.trim().toLowerCase())) {
+                    invalidRows.add(ImportErrorDto.builder()
+                            .rowNumber(rowNum)
+                            .columnName("Project Name")
+                            .value(name)
+                            .errorMessage("Project '" + name + "' already exists in the workspace. Duplicate projects are not allowed.")
+                            .errorType(ImportErrorType.DATABASE_DUPLICATE)
+                            .build());
+                    databaseDuplicatesCount++;
+                    if (!duplicateNames.contains(name)) {
+                        duplicateNames.add(name);
+                    }
+                    continue;
+                }
+
                 String desc = getCellString(row.getCell(1));
                 String priorityStr = getCellString(row.getCell(2)).toUpperCase();
                 String statusStr = getCellString(row.getCell(3)).toUpperCase();
@@ -121,6 +191,9 @@ public class ImportValidatorService {
                 .invalidRows(invalidRows)
                 .warnings(warnings)
                 .summary(summary)
+                .intrasheetDuplicatesCount(intrasheetDuplicatesCount)
+                .databaseDuplicatesCount(databaseDuplicatesCount)
+                .duplicateNames(duplicateNames)
                 .build();
     }
 
@@ -128,6 +201,10 @@ public class ImportValidatorService {
         List<Object> validRows = new ArrayList<>();
         List<ImportErrorDto> invalidRows = new ArrayList<>();
         List<String> warnings = new ArrayList<>();
+
+        int intrasheetDuplicatesCount = 0;
+        int databaseDuplicatesCount = 0;
+        List<String> duplicateNames = new ArrayList<>();
 
         // Warm up caches for DB lookups
         List<Project> dbProjects = projectRepository.findAll();
@@ -138,6 +215,38 @@ public class ImportValidatorService {
             Sheet sheet = workbook.getSheetAt(0);
             int rowCount = sheet.getLastRowNum();
 
+            // ── STEP 1: Intra-sheet duplicates ────────────────────────────────────────
+            Map<String, List<Integer>> taskKeyToRows = new LinkedHashMap<>();
+            for (int r = 1; r <= rowCount; r++) {
+                Row row = sheet.getRow(r);
+                if (row == null || isRowEmpty(row)) continue;
+                String projectName = getCellString(row.getCell(0));
+                String title = getCellString(row.getCell(1));
+                String key = (title.trim() + "||" + projectName.trim()).toLowerCase();
+                taskKeyToRows.computeIfAbsent(key, k -> new ArrayList<>()).add(r + 1);
+            }
+
+            Set<Integer> intraDuplicateTaskRows = new HashSet<>();
+            taskKeyToRows.forEach((key, rowNums) -> {
+                if (rowNums.size() > 1) {
+                    for (int idx = 1; idx < rowNums.size(); idx++) {
+                        intraDuplicateTaskRows.add(rowNums.get(idx));
+                    }
+                }
+            });
+
+            // ── STEP 2: Database duplicates ───────────────────────────────────────────
+            List<Object[]> existingTasks = taskRepository.findAllTitleAndProjectName();
+            Set<String> existingTaskKeys = new HashSet<>();
+            for (Object[] r : existingTasks) {
+                if (r != null && r[0] != null && r[1] != null) {
+                    String titleVal = r[0].toString().trim();
+                    String projectVal = r[1].toString().trim();
+                    existingTaskKeys.add((titleVal + "||" + projectVal).toLowerCase());
+                }
+            }
+
+            // ── STEP 3: Validate rows ─────────────────────────────────────────────────
             for (int r = 1; r <= rowCount; r++) {
                 Row row = sheet.getRow(r);
                 if (row == null || isRowEmpty(row)) continue;
@@ -145,6 +254,41 @@ public class ImportValidatorService {
                 int rowNum = r + 1;
                 String projectName = getCellString(row.getCell(0));
                 String title = getCellString(row.getCell(1));
+
+                String taskKey = (title.trim() + "||" + projectName.trim()).toLowerCase();
+
+                // Check intra-sheet duplicate
+                if (intraDuplicateTaskRows.contains(rowNum)) {
+                    invalidRows.add(ImportErrorDto.builder()
+                            .rowNumber(rowNum)
+                            .columnName("Task Title")
+                            .value(title)
+                            .errorMessage("Duplicate within sheet — task '" + title + "' under project '" + projectName + "' appears multiple times. Only the first occurrence will be considered.")
+                            .errorType(ImportErrorType.INTRA_SHEET_DUPLICATE)
+                            .build());
+                    intrasheetDuplicatesCount++;
+                    if (!duplicateNames.contains(title)) {
+                        duplicateNames.add(title);
+                    }
+                    continue;
+                }
+
+                // Check database duplicate
+                if (existingTaskKeys.contains(taskKey)) {
+                    invalidRows.add(ImportErrorDto.builder()
+                            .rowNumber(rowNum)
+                            .columnName("Task Title")
+                            .value(title)
+                            .errorMessage("Task '" + title + "' already exists under project '" + projectName + "' in the workspace. Duplicate tasks are not allowed.")
+                            .errorType(ImportErrorType.DATABASE_DUPLICATE)
+                            .build());
+                    databaseDuplicatesCount++;
+                    if (!duplicateNames.contains(title)) {
+                        duplicateNames.add(title);
+                    }
+                    continue;
+                }
+
                 String desc = getCellString(row.getCell(2));
                 String priorityStr = getCellString(row.getCell(3)).toUpperCase();
                 String statusStr = getCellString(row.getCell(4)).toUpperCase();
@@ -259,6 +403,9 @@ public class ImportValidatorService {
                 .invalidRows(invalidRows)
                 .warnings(warnings)
                 .summary(summary)
+                .intrasheetDuplicatesCount(intrasheetDuplicatesCount)
+                .databaseDuplicatesCount(databaseDuplicatesCount)
+                .duplicateNames(duplicateNames)
                 .build();
     }
 

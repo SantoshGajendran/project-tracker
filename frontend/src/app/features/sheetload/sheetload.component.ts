@@ -210,4 +210,22 @@ export class SheetLoadComponent {
   navigateToHome(): void {
     this.router.navigate(['/']);
   }
+
+  get intrasheetDupes(): ImportError[] {
+    return this.validationReport?.invalidRows.filter(
+      e => e.errorType === 'INTRA_SHEET_DUPLICATE'
+    ) || [];
+  }
+
+  get dbDupes(): ImportError[] {
+    return this.validationReport?.invalidRows.filter(
+      e => e.errorType === 'DATABASE_DUPLICATE'
+    ) || [];
+  }
+
+  get validationErrors(): ImportError[] {
+    return this.validationReport?.invalidRows.filter(
+      e => e.errorType === 'VALIDATION_ERROR'
+    ) || [];
+  }
 }

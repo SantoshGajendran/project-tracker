@@ -14,4 +14,14 @@ public class ImportErrorDto {
     private String columnName;
     private String value;
     private String errorMessage;
+    private ImportErrorType errorType;
+
+    public ImportErrorDto(int rowNumber, String columnName, String value, String errorMessage) {
+        this.rowNumber = rowNumber;
+        this.columnName = columnName;
+        this.value = value;
+        this.errorMessage = errorMessage;
+        this.errorType = ImportErrorType.VALIDATION_ERROR;
+    }
 }
+
