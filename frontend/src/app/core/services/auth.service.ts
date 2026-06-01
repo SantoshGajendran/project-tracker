@@ -77,11 +77,13 @@ export class AuthService {
 
   loginWithGoogle(): void {
     const redirectUri = encodeURIComponent(`${window.location.origin}/oauth2/redirect`);
-    window.location.href = `http://localhost:8080/oauth2/authorize/google?redirect_uri=${redirectUri}`;
+    const backendUrl = environment.apiUrl.replace('/api', '');
+    window.location.href = `${backendUrl}/oauth2/authorize/google?redirect_uri=${redirectUri}`;
   }
 
   loginWithGithub(): void {
     const redirectUri = encodeURIComponent(`${window.location.origin}/oauth2/redirect`);
-    window.location.href = `http://localhost:8080/oauth2/authorize/github?redirect_uri=${redirectUri}`;
+    const backendUrl = environment.apiUrl.replace('/api', '');
+    window.location.href = `${backendUrl}/oauth2/authorize/github?redirect_uri=${redirectUri}`;
   }
 }

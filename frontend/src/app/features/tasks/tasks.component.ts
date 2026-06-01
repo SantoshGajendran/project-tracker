@@ -21,6 +21,7 @@ import { BadgeComponent } from '../../shared/badge/badge.component';
 import { AvatarComponent } from '../../shared/avatar/avatar.component';
 import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
 import { ConfirmationDialogComponent } from '../../shared/confirmation-dialog/confirmation-dialog.component';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 
 @Component({
   selector: 'app-tasks',
@@ -38,7 +39,8 @@ import { ConfirmationDialogComponent } from '../../shared/confirmation-dialog/co
     MatSnackBarModule,
     BadgeComponent,
     AvatarComponent,
-    EmptyStateComponent
+    EmptyStateComponent,
+    MatCheckboxModule
   ],
   templateUrl: './tasks.component.html',
   styleUrls: ['./tasks.component.css']
@@ -55,6 +57,7 @@ export class TasksComponent implements OnInit {
   tasks: Task[] = [];
   projects: Project[] = [];
   users: User[] = [];
+  selectedTaskIds = new Set<number>();
 
   // Filter bindings
   selectedProjectId: string = '';
@@ -93,6 +96,7 @@ export class TasksComponent implements OnInit {
 
   loadTasks(): void {
     this.loading = true;
+    this.selectedTaskIds.clear();
     const projId = this.selectedProjectId ? Number(this.selectedProjectId) : undefined;
     const assId = this.selectedAssigneeId ? Number(this.selectedAssigneeId) : undefined;
     const stat = this.selectedStatus || undefined;
@@ -159,6 +163,56 @@ export class TasksComponent implements OnInit {
           next: (res) => {
             if (res.success) {
               this.snackBar.open('Task deleted successfully', 'Close', { duration: 3000 });
+              this.loadTasks();
+            }
+          }
+        });
+      }
+    });
+  }
+
+  toggleTask(id: number, event: any): void {
+    if (event.checked) {
+      this.selectedTaskIds.add(id);
+    } else {
+      this.selectedTaskIds.delete(id);
+    }
+  }
+
+  toggleAllTasks(event: any): void {
+    if (event.checked) {
+      this.tasks.forEach(t => this.selectedTaskIds.add(t.id));
+    } else {
+      this.tasks.forEach(t => this.selectedTaskIds.delete(t.id));
+    }
+  }
+
+  isAllSelected(): boolean {
+    return this.tasks.length > 0 && this.tasks.every(t => this.selectedTaskIds.has(t.id));
+  }
+
+  deleteSelectedTasks(): void {
+    if (this.selectedTaskIds.size === 0) return;
+
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '380px',
+      data: {
+        title: 'Delete Selected Tasks',
+        message: `Are you sure you want to delete the ${this.selectedTaskIds.size} selected task(s)? This action cannot be undone.`,
+        confirmText: 'Delete Tasks',
+        cancelText: 'Cancel',
+        type: 'danger'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        const ids = Array.from(this.selectedTaskIds);
+        this.taskService.deleteTasks(ids).subscribe({
+          next: (res) => {
+            if (res.success) {
+              this.snackBar.open('Selected tasks deleted successfully', 'Close', { duration: 3000 });
+              this.selectedTaskIds.clear();
               this.loadTasks();
             }
           }

@@ -21,6 +21,7 @@ import { AvatarComponent } from '../../shared/avatar/avatar.component';
 import { BadgeComponent } from '../../shared/badge/badge.component';
 import { ProgressBarComponent } from '../../shared/progress-bar/progress-bar.component';
 import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
+import { ConfirmationDialogComponent } from '../../shared/confirmation-dialog/confirmation-dialog.component';
 import Chart from 'chart.js/auto';
 
 interface MemberStats extends User {
@@ -48,7 +49,8 @@ interface MemberStats extends User {
     ProgressBarComponent,
     EmptyStateComponent,
     MatDialogModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    ConfirmationDialogComponent
   ],
   templateUrl: './team.component.html',
   styleUrls: ['./team.component.css']
@@ -248,6 +250,40 @@ export class TeamComponent implements OnInit, OnDestroy {
         this.snackBar.open('Teammate updated successfully', 'Close', { duration: 3000 });
         this.selectedMember = undefined; // Go back to list and refresh
         this.loadTeamMembers();
+      }
+    });
+  }
+
+  deleteTeammate(member: MemberStats): void {
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '380px',
+      data: {
+        title: 'Delete Teammate',
+        message: `Are you sure you want to delete ${member.name}? This will permanently remove their account, comments, and project memberships.`,
+        confirmText: 'Delete Teammate',
+        cancelText: 'Cancel',
+        type: 'danger',
+        requireTypedConfirmation: true,
+        expectedConfirmationText: 'DELETE'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.userService.deleteUser(member.id).subscribe({
+          next: (res) => {
+            if (res.success) {
+              this.snackBar.open(`${member.name} has been deleted.`, 'Close', { duration: 3000 });
+              this.selectedMember = undefined;
+              this.loadTeamMembers();
+            } else {
+              this.snackBar.open(res.message || 'Failed to delete teammate', 'Close', { duration: 3000 });
+            }
+          },
+          error: (err) => {
+            this.snackBar.open(err.error?.message || 'Failed to delete teammate', 'Close', { duration: 3000 });
+          }
+        });
       }
     });
   }

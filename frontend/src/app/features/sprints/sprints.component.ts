@@ -8,6 +8,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { DashboardService } from '../../core/services/dashboard.service';
 import { ProjectService } from '../../core/services/project.service';
+import { SprintService } from '../../core/services/sprint.service';
 import { Sprint, BurndownData, Project } from '../../core/models/models';
 import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
 import Chart from 'chart.js/auto';
@@ -30,12 +31,14 @@ import Chart from 'chart.js/auto';
 export class SprintsComponent implements OnInit, OnDestroy {
   dashboardService = inject(DashboardService);
   projectService = inject(ProjectService);
+  sprintService = inject(SprintService);
   route = inject(ActivatedRoute);
 
   projects: Project[] = [];
   sprints: Sprint[] = [];
   selectedSprintId?: number;
   burndownData?: BurndownData;
+  sprintCompletedCounts: { [sprintId: number]: number } = {};
 
   loading = true;
   loadingBurndown = false;
@@ -119,7 +122,29 @@ export class SprintsComponent implements OnInit, OnDestroy {
               const active = this.sprints.find(s => s.status === 'ACTIVE');
               this.selectedSprintId = active ? active.id : this.sprints[0].id;
             }
-            this.loadBurndownChart();
+            
+            // Dynamically load real completed task counts for each sprint
+            const countPromises = this.sprints.map(s => new Promise<void>((resolveCount) => {
+              this.sprintService.getSprintTasks(s.id).subscribe({
+                next: (tasksRes) => {
+                  if (tasksRes.success) {
+                    const completedCount = tasksRes.data.filter(t => t.status === 'DONE').length;
+                    this.sprintCompletedCounts[s.id] = completedCount;
+                  } else {
+                    this.sprintCompletedCounts[s.id] = 0;
+                  }
+                  resolveCount();
+                },
+                error: () => {
+                  this.sprintCompletedCounts[s.id] = 0;
+                  resolveCount();
+                }
+              });
+            }));
+
+            Promise.all(countPromises).then(() => {
+              this.loadBurndownChart();
+            });
           } else {
             this.loading = false;
             setTimeout(() => this.initVelocityChart(), 50);
@@ -176,7 +201,11 @@ export class SprintsComponent implements OnInit, OnDestroy {
   }
 
   getAvgVelocity(): number {
-    return 37; // placeholder — replace with real aggregated data
+    if (this.sprints.length === 0) return 0;
+    const completedSprints = this.sprints.filter(s => s.status === 'COMPLETED');
+    const targetSprints = completedSprints.length > 0 ? completedSprints : this.sprints;
+    const total = targetSprints.reduce((sum, s) => sum + (this.sprintCompletedCounts[s.id] || 0), 0);
+    return Math.round(total / targetSprints.length);
   }
 
   getBurndownStatus(): string {
@@ -350,8 +379,8 @@ export class SprintsComponent implements OnInit, OnDestroy {
       barGradient.addColorStop(1,   'rgba(22, 163, 74, 0.10)');
     }
 
-    const sprintNames = ['Sprint 10', 'Sprint 11', 'Sprint 12', 'Sprint 13', 'Sprint 14 (Active)'];
-    const velocityData = [34, 42, 38, 45, 28];
+    const sprintNames = this.sprints.map(s => s.status === 'ACTIVE' ? `${s.name} (Active)` : s.name);
+    const velocityData = this.sprints.map(s => this.sprintCompletedCounts[s.id] || 0);
 
     this.velocityChart = new Chart(ctx, {
       type: 'bar',

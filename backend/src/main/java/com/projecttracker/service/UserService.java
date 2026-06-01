@@ -16,6 +16,8 @@ import com.projecttracker.repository.ProjectMemberRepository;
 import com.projecttracker.repository.TaskRepository;
 import com.projecttracker.repository.UserRepository;
 import com.projecttracker.repository.ProjectRepository;
+import com.projecttracker.repository.CommentRepository;
+import com.projecttracker.repository.ActivityLogRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -34,6 +36,8 @@ public class UserService {
     private final TaskRepository taskRepository;
     private final ProjectMemberRepository projectMemberRepository;
     private final ProjectRepository projectRepository;
+    private final CommentRepository commentRepository;
+    private final ActivityLogRepository activityLogRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
 
@@ -45,6 +49,15 @@ public class UserService {
 
     @Transactional
     public void deleteUser(Long id) {
+        // Prevent self-deletion
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof User) {
+            User currentUser = (User) auth.getPrincipal();
+            if (currentUser.getId().equals(id)) {
+                throw new IllegalArgumentException("You cannot delete your own account");
+            }
+        }
+
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
 
@@ -66,6 +79,12 @@ public class UserService {
                 projectRepository.saveAll(createdProjects);
             }
         }
+
+        // Clean up dependencies
+        commentRepository.deleteByAuthorId(id);
+        projectMemberRepository.deleteByUserId(id);
+        taskRepository.nullifyAssignedToUserId(id);
+        activityLogRepository.nullifyPerformedByUserId(id);
 
         userRepository.delete(user);
     }

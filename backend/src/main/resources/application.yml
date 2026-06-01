@@ -49,8 +49,8 @@ spring:
 
 app:
   oauth2:
-    redirect-uri: http://localhost:4200/oauth2/redirect
-    allowed-origins: http://localhost:4200
+    redirect-uri: http://192.168.2.52:4200/oauth2/redirect
+    allowed-origins: http://localhost:4200,http://192.168.2.52:4200
 
 jwt:
   secret: 9a65a3d242a32c78a3c89bcf28131eefc4a169b183654d2e8b2839d8924b1234b6b7a8d9e2a3c4b5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9

@@ -46,7 +46,10 @@ export class ProjectService {
   }
 
   assignMember(projectId: number, memberDto: { userId: number; role: string }): Observable<ApiResponse<ProjectMember>> {
-    return this.http.post<ApiResponse<ProjectMember>>(`${this.apiUrl}/${projectId}/members`, memberDto);
+    return this.http.post<ApiResponse<ProjectMember>>(`${this.apiUrl}/${projectId}/members`, {
+      ...memberDto,
+      projectId
+    });
   }
 
   removeMember(projectId: number, userId: number): Observable<ApiResponse<void>> {

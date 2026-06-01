@@ -4,6 +4,7 @@ import com.projecttracker.entity.ActivityLog;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -17,4 +18,8 @@ public interface ActivityLogRepository extends JpaRepository<ActivityLog, Long> 
     
     @Query("SELECT a FROM ActivityLog a WHERE (:projectId IS NULL OR (a.entityType = 'Project' AND a.entityId = :projectId) OR (a.entityType = 'Task' AND a.entityId IN (SELECT t.id FROM Task t WHERE t.project.id = :projectId)) OR (a.entityType = 'Sprint' AND a.entityId IN (SELECT s.id FROM Sprint s WHERE s.project.id = :projectId)))")
     Page<ActivityLog> findProjectActivity(@Param("projectId") Long projectId, Pageable pageable);
+
+    @Modifying
+    @Query("UPDATE ActivityLog a SET a.performedBy = null WHERE a.performedBy.id = :userId")
+    void nullifyPerformedByUserId(@Param("userId") Long userId);
 }

@@ -694,6 +694,7 @@ export class CreateSprintDialogComponent {
     const formatted = {
       ...val,
       projectId: this.data.projectId,
+      status: 'PLANNED',
       startDate: this.formatDate(val.startDate),
       endDate: this.formatDate(val.endDate)
     };

@@ -169,6 +169,33 @@ public class TaskService {
     }
 
     @Transactional
+    public void deleteTasks(List<Long> ids, User performer) {
+        if (performer.getRole() != UserRole.MANAGER) {
+            throw new AccessDeniedException("Only managers can bulk delete tasks");
+        }
+        List<Task> tasks = taskRepository.findAllById(ids);
+        if (tasks.isEmpty()) return;
+
+        java.util.Set<Long> projectIds = tasks.stream()
+                .map(t -> t.getProject().getId())
+                .collect(Collectors.toSet());
+
+        commentRepository.deleteByTaskIdIn(ids);
+        taskRepository.deleteAll(tasks);
+
+        for (Long projectId : projectIds) {
+            projectService.recalculateProjectProgress(projectId);
+        }
+
+        for (Task task : tasks) {
+            activityLogService.logActivity(
+                    "Task", task.getId(), "DELETE", performer,
+                    "Task '" + task.getTitle() + "' deleted (Bulk)"
+            );
+        }
+    }
+
+    @Transactional
     public TaskDto patchStatus(Long id, TaskStatus status, User performer) {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));

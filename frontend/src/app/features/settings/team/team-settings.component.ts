@@ -91,76 +91,93 @@ interface PendingInvite {
         </div>
 
         <div class="members-table-wrapper">
-          <div class="table-header-row">
-            <span class="th-member">Member</span>
-            <span class="th-role">Role</span>
-            <span class="th-projects">Projects</span>
-            <span class="th-joined">Joined</span>
-            <span class="th-active">Last Active</span>
-            <span class="th-actions">Actions</span>
-          </div>
+          <table class="members-table" *ngIf="filteredMembers.length > 0">
+            <thead>
+              <tr>
+                <th class="th-member">Member</th>
+                <th class="th-role">Role</th>
+                <th class="th-projects">Projects</th>
+                <th class="th-joined">Joined</th>
+                <th class="th-active">Last Active</th>
+                <th class="th-actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let m of filteredMembers">
+                <!-- Avatar + identity -->
+                <td>
+                  <div class="member-identity">
+                    <app-avatar [name]="m.name" [src]="m.avatar" size="lg"></app-avatar>
+                    <div class="identity-meta">
+                      <p class="member-name">
+                        {{ m.name }}
+                        <span class="badge you-badge" *ngIf="m.isCurrentUser">you</span>
+                      </p>
+                      <p class="member-email mono">{{ m.email }}</p>
+                    </div>
+                  </div>
+                </td>
 
-          <div class="member-row" *ngFor="let m of filteredMembers">
-            <!-- Avatar + identity -->
-            <div class="member-identity">
-              <app-avatar [name]="m.name" [src]="m.avatar" size="lg"></app-avatar>
-              <div class="identity-meta">
-                <p class="member-name">
-                  {{ m.name }}
-                  <span class="badge you-badge" *ngIf="m.isCurrentUser">you</span>
-                </p>
-                <p class="member-email mono">{{ m.email }}</p>
-              </div>
-            </div>
+                <!-- Role dropdown (editable for manager only) -->
+                <td>
+                  <div class="member-role">
+                    <select 
+                      class="role-select badge font-mono"
+                      [ngClass]="m.role.toLowerCase()"
+                      [disabled]="m.isCurrentUser || !authService.isManager()"
+                      [(ngModel)]="m.role"
+                      (change)="updateRole(m)"
+                    >
+                      <option value="MANAGER">MANAGER</option>
+                      <option value="TEAM_LEAD">TEAM_LEAD</option>
+                      <option value="TEAMMATE">MEMBER</option>
+                    </select>
+                  </div>
+                </td>
 
-            <!-- Role dropdown (editable for manager only) -->
-            <div class="member-role">
-              <select 
-                class="role-select badge font-mono"
-                [ngClass]="m.role.toLowerCase()"
-                [disabled]="m.isCurrentUser || !authService.isManager()"
-                [(ngModel)]="m.role"
-                (change)="updateRole(m)"
-              >
-                <option value="MANAGER">MANAGER</option>
-                <option value="TEAM_LEAD">TEAM_LEAD</option>
-                <option value="TEAMMATE">MEMBER</option>
-              </select>
-            </div>
+                <!-- Active projects count -->
+                <td>
+                  <div class="member-projects">
+                    <span class="count-chip mono">{{ m.activeProjects }} project{{ m.activeProjects !== 1 ? 's' : '' }}</span>
+                  </div>
+                </td>
 
-            <!-- Active projects count -->
-            <div class="member-projects">
-              <span class="count-chip mono">{{ m.activeProjects }} project{{ m.activeProjects !== 1 ? 's' : '' }}</span>
-            </div>
+                <!-- Joined date -->
+                <td>
+                  <span class="mono muted col-joined">{{ m.createdAt | date:'MMM d, y' }}</span>
+                </td>
 
-            <!-- Joined date -->
-            <span class="mono muted col-joined">{{ m.createdAt | date:'MMM d, y' }}</span>
+                <!-- Last active -->
+                <td>
+                  <span class="mono muted col-active" [class.online]="m.isOnline">
+                    <span class="online-dot" *ngIf="m.isOnline"></span>
+                    {{ m.isOnline ? 'Online now' : (m.lastActive | timeAgo) }}
+                  </span>
+                </td>
 
-            <!-- Last active -->
-            <span class="mono muted col-active" [class.online]="m.isOnline">
-              <span class="online-dot" *ngIf="m.isOnline"></span>
-              {{ m.isOnline ? 'Online now' : (m.lastActive | timeAgo) }}
-            </span>
-
-            <!-- Actions -->
-            <div class="member-actions">
-              <button 
-                class="icon-btn-action" 
-                title="View profile"
-                [routerLink]="['/team']"
-              >
-                <i class="ti ti-external-link"></i>
-              </button>
-              <button 
-                class="icon-btn-action danger" 
-                title="Remove from workspace"
-                *ngIf="!m.isCurrentUser && authService.isManager()"
-                (click)="removeMember(m)"
-              >
-                <i class="ti ti-user-minus"></i>
-              </button>
-            </div>
-          </div>
+                <!-- Actions -->
+                <td class="td-actions">
+                  <div class="member-actions">
+                    <button 
+                      class="icon-btn-action" 
+                      title="View profile"
+                      [routerLink]="['/team']"
+                    >
+                      <i class="ti ti-external-link"></i>
+                    </button>
+                    <button 
+                      class="icon-btn-action danger" 
+                      title="Remove from workspace"
+                      *ngIf="!m.isCurrentUser && authService.isManager()"
+                      (click)="removeMember(m)"
+                    >
+                      <i class="ti ti-user-minus"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
 
           <div *ngIf="filteredMembers.length === 0" class="empty-state">
             No workspace members match your search criteria.
@@ -173,7 +190,6 @@ interface PendingInvite {
     .settings-content {
       flex: 1;
       padding: 40px 56px;
-      max-width: 1000px;
     }
 
     .settings-section-header {
@@ -329,13 +345,16 @@ interface PendingInvite {
 
     .members-table-wrapper {
       padding: 0;
+      overflow-x: auto;
     }
 
-    .table-header-row {
-      display: grid;
-      grid-template-columns: 2.5fr 150px 120px 120px 160px 80px;
-      align-items: center;
-      gap: 16px;
+    .members-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .members-table th {
       padding: 16px 24px;
       border-bottom: 1px solid var(--border-strong);
       font-family: var(--font-mono);
@@ -344,33 +363,33 @@ interface PendingInvite {
       letter-spacing: 0.05em;
       text-transform: uppercase;
       color: var(--text-muted);
+      white-space: nowrap;
     }
 
-    .th-actions {
-      text-align: right;
-    }
-
-    .member-row {
-      display: grid;
-      grid-template-columns: 2.5fr 150px 120px 120px 160px 80px;
-      align-items: center;
-      gap: 16px;
+    .members-table td {
       padding: 16px 24px;
       border-bottom: 1px solid var(--border-subtle);
+      vertical-align: middle;
+    }
+
+    .members-table tbody tr {
       transition: background-color var(--duration-fast);
-      position: relative;
     }
 
-    .member-row:last-child {
-      border-bottom: none;
-    }
-
-    .member-row:hover {
+    .members-table tbody tr:hover {
       background: var(--bg-elevated);
     }
 
-    .member-row:hover .member-actions {
-      opacity: 1;
+    .members-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .th-actions, .td-actions {
+      text-align: right;
+    }
+
+    .td-actions .member-actions {
+      justify-content: flex-end;
     }
 
     .member-identity {
@@ -499,7 +518,7 @@ interface PendingInvite {
       display: flex;
       gap: 6px;
       justify-content: flex-end;
-      opacity: 0;
+      opacity: 1;
       transition: opacity var(--duration-fast);
     }
 
@@ -551,22 +570,29 @@ interface PendingInvite {
         flex-direction: column;
         align-items: stretch;
       }
-      .table-header-row, .member-row {
-        grid-template-columns: 1fr 120px;
-        gap: 12px;
-        padding: 16px 20px;
-      }
-      .th-projects, .th-joined, .th-active, .th-actions,
-      .member-projects, .col-joined, .col-active {
+      .members-table th:nth-child(3),
+      .members-table th:nth-child(4),
+      .members-table th:nth-child(5),
+      .members-table th:nth-child(6),
+      .members-table td:nth-child(3),
+      .members-table td:nth-child(4),
+      .members-table td:nth-child(5) {
         display: none;
       }
+      
+      .members-table th, .members-table td {
+        padding: 12px 16px;
+      }
+      
+      .td-actions {
+        display: table-cell;
+      }
+      
       .member-actions {
         opacity: 1;
-        grid-column: span 2;
-        justify-content: flex-start;
-        margin-top: 8px;
-        padding-top: 8px;
-        border-top: 1px solid var(--border-subtle);
+        margin-top: 0;
+        border-top: none;
+        padding-top: 0;
       }
     }
   `]

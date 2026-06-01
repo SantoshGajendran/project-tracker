@@ -43,6 +43,14 @@ export class TaskService {
     return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/${id}`);
   }
 
+  deleteTasks(ids: number[]): Observable<ApiResponse<void>> {
+    let params = new HttpParams();
+    ids.forEach(id => {
+      params = params.append('ids', id.toString());
+    });
+    return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/bulk`, { params });
+  }
+
   patchStatus(id: number, status: string): Observable<ApiResponse<Task>> {
     let params = new HttpParams().set('status', status);
     return this.http.patch<ApiResponse<Task>>(`${this.apiUrl}/${id}/status`, null, { params });

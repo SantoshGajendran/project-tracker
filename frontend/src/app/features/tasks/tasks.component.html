@@ -4,9 +4,21 @@
       <h1 class="page-title">Tasks Directory</h1>
       <p class="page-subtitle">Configure workspace tickets and deliverables globally</p>
     </div>
-    <button mat-raised-button class="create-btn" (click)="openCreateTaskModal()">
-      <mat-icon>add</mat-icon> Create Task
-    </button>
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <button 
+        *ngIf="authService.isManager() && selectedTaskIds.size > 0" 
+        mat-raised-button 
+        color="warn" 
+        (click)="deleteSelectedTasks()"
+        style="height: 40px; display: flex; align-items: center; gap: 8px;">
+        <mat-icon style="margin: 0; font-size: 20px; width: 20px; height: 20px;">delete_sweep</mat-icon>
+        Delete Selected ({{ selectedTaskIds.size }})
+      </button>
+      <button mat-raised-button class="create-btn" (click)="openCreateTaskModal()" style="height: 40px; display: flex; align-items: center; gap: 8px;">
+        <mat-icon style="margin: 0; font-size: 20px; width: 20px; height: 20px;">add</mat-icon>
+        Create Task
+      </button>
+    </div>
   </div>
 
   <!-- Filters panel -->
@@ -75,6 +87,9 @@
       <table class="tasks-table">
         <thead>
           <tr>
+            <th *ngIf="authService.isManager()" style="width: 48px; padding-left: 24px;">
+              <mat-checkbox (change)="toggleAllTasks($event)" [checked]="isAllSelected()"></mat-checkbox>
+            </th>
             <th>Task Title</th>
             <th>Project</th>
             <th>Assignee</th>
@@ -86,6 +101,9 @@
         </thead>
         <tbody>
           <tr *ngFor="let t of tasks" [ngClass]="{'overdue-row': isOverdue(t)}">
+            <td *ngIf="authService.isManager()" style="width: 48px; padding-left: 24px;">
+              <mat-checkbox (change)="toggleTask(t.id, $event)" [checked]="selectedTaskIds.has(t.id)"></mat-checkbox>
+            </td>
             <td class="task-title-cell">
               <div class="title-cell-content">
                 <mat-icon *ngIf="isOverdue(t)" class="overdue-icon" title="Overdue Task">error_outline</mat-icon>

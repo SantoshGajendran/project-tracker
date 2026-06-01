@@ -6,6 +6,7 @@ import com.projecttracker.entity.TaskStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -68,4 +69,8 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     List<Object[]> findAllTitleAndProjectName();
 
     boolean existsByTitleIgnoreCaseAndProject_NameIgnoreCase(String title, String projectName);
+
+    @Modifying
+    @Query("UPDATE Task t SET t.assignedTo = null WHERE t.assignedTo.id = :userId")
+    void nullifyAssignedToUserId(@Param("userId") Long userId);
 }

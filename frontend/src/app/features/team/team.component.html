@@ -59,10 +59,16 @@
       <button mat-button class="back-link" (click)="selectedMember = undefined">
         <mat-icon>arrow_back</mat-icon> Back to Team Directory
       </button>
-      <button *ngIf="authService.isManagerOrLead()" mat-raised-button color="primary" (click)="openEditTeammateDialog(selectedMember)" style="height: 40px; display: flex; align-items: center; gap: 8px;">
-        <mat-icon style="margin: 0; font-size: 20px; width: 20px; height: 20px;">edit</mat-icon>
-        Edit Teammate
-      </button>
+      <div style="display: flex; gap: 8px;">
+        <button *ngIf="authService.isManagerOrLead()" mat-raised-button color="primary" (click)="openEditTeammateDialog(selectedMember)" style="height: 40px; display: flex; align-items: center; gap: 8px;">
+          <mat-icon style="margin: 0; font-size: 20px; width: 20px; height: 20px;">edit</mat-icon>
+          Edit Teammate
+        </button>
+        <button *ngIf="authService.isManager() && selectedMember.id !== authService.currentUser()?.id" mat-raised-button color="warn" (click)="deleteTeammate(selectedMember)" style="height: 40px; display: flex; align-items: center; gap: 8px;">
+          <mat-icon style="margin: 0; font-size: 20px; width: 20px; height: 20px;">delete</mat-icon>
+          Delete Teammate
+        </button>
+      </div>
     </div>
 
     <div class="profile-grid">

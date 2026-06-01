@@ -73,6 +73,15 @@ public class TaskController {
         return ResponseEntity.ok(ApiResponse.success(null, "Task deleted successfully"));
     }
 
+    @DeleteMapping("/bulk")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('MANAGER')")
+    public ResponseEntity<ApiResponse<Void>> deleteTasks(
+            @RequestParam("ids") List<Long> ids,
+            @AuthenticationPrincipal User user) {
+        taskService.deleteTasks(ids, user);
+        return ResponseEntity.ok(ApiResponse.success(null, "Tasks deleted successfully"));
+    }
+
     @PatchMapping("/{id}/status")
     public ResponseEntity<ApiResponse<TaskDto>> patchStatus(
             @PathVariable Long id,
