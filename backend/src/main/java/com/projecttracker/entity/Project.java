@@ -32,10 +32,10 @@ public class Project {
     @Column(nullable = false)
     private ProjectPriority priority;
 
-    @Column(name = "start_date", nullable = false)
+    @Column(name = "start_date")
     private LocalDate startDate;
 
-    @Column(name = "due_date", nullable = false)
+    @Column(name = "due_date")
     private LocalDate dueDate;
 
     @Column(nullable = false)

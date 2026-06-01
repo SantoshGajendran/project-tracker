@@ -86,6 +86,18 @@ public class UserService {
         if (userDto.getRole() != null) {
             user.setRole(userDto.getRole());
         }
+        if (userDto.getEmail() != null && !userDto.getEmail().equalsIgnoreCase(user.getEmail())) {
+            org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            boolean isManager = auth != null && auth.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_MANAGER"));
+            if (!isManager) {
+                throw new org.springframework.security.access.AccessDeniedException("Only managers can change email addresses");
+            }
+            if (userRepository.existsByEmail(userDto.getEmail())) {
+                throw new IllegalArgumentException("Email is already taken");
+            }
+            user.setEmail(userDto.getEmail());
+        }
         
         User savedUser = userRepository.save(user);
         return userMapper.toDto(savedUser);

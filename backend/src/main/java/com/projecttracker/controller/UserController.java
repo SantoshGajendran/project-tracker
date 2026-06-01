@@ -3,9 +3,12 @@ package com.projecttracker.controller;
 import com.projecttracker.dto.ApiResponse;
 import com.projecttracker.dto.UserDto;
 import com.projecttracker.dto.UserStatsDto;
+import com.projecttracker.dto.RegisterRequest;
+import com.projecttracker.entity.User;
 import com.projecttracker.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,13 +38,22 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(stats, "User statistics retrieved"));
     }
 
+    @PostMapping
+    @PreAuthorize("hasAnyRole('MANAGER', 'TEAM_LEAD')")
+    public ResponseEntity<ApiResponse<UserDto>> createUser(@jakarta.validation.Valid @RequestBody RegisterRequest registerRequest) {
+        User user = userService.registerUser(registerRequest);
+        return ResponseEntity.ok(ApiResponse.success(userService.getUserById(user.getId()), "Teammate created successfully"));
+    }
+
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('MANAGER', 'TEAM_LEAD') or #id == principal.id")
     public ResponseEntity<ApiResponse<UserDto>> updateUserProfile(@PathVariable Long id, @RequestBody UserDto userDto) {
         UserDto updatedUser = userService.updateUserProfile(id, userDto);
         return ResponseEntity.ok(ApiResponse.success(updatedUser, "User profile updated successfully"));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('MANAGER', 'TEAM_LEAD')")
     public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.ok(ApiResponse.success(null, "User deleted successfully"));

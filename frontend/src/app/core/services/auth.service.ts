@@ -15,6 +15,10 @@ export class AuthService {
   currentUser = signal<User | null>(null);
   isAuthenticated = computed(() => this.currentUser() !== null);
   isManager = computed(() => this.currentUser()?.role === 'MANAGER');
+  isManagerOrLead = computed(() => {
+    const role = this.currentUser()?.role;
+    return role === 'MANAGER' || role === 'TEAM_LEAD';
+  });
 
   constructor(private http: HttpClient, private router: Router) {
     this.loadTokenAndFetchUser();
@@ -24,7 +28,7 @@ export class AuthService {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/login`, credentials).pipe(
       tap(res => {
         if (res.success && res.data.token) {
-          localStorage.setItem('token', res.data.token);
+          sessionStorage.setItem('token', res.data.token);
           this.currentUser.set(res.data.user);
         }
       })
@@ -36,13 +40,13 @@ export class AuthService {
   }
 
   logout(): void {
-    localStorage.removeItem('token');
+    sessionStorage.removeItem('token');
     this.currentUser.set(null);
     this.router.navigate(['/login']);
   }
 
   getCurrentUser(): Observable<User | null> {
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     if (!token) {
       return of(null);
     }
@@ -67,7 +71,7 @@ export class AuthService {
   }
 
   setToken(token: string): void {
-    localStorage.setItem('token', token);
+    sessionStorage.setItem('token', token);
     this.loadTokenAndFetchUser();
   }
 

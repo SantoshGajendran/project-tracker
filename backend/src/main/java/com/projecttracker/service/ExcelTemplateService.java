@@ -38,7 +38,7 @@ public class ExcelTemplateService {
                     "Project Name*", "Description",
                     "Priority (LOW/MEDIUM/HIGH/CRITICAL)*",
                     "Status (PLANNING/IN_PROGRESS/ON_HOLD/COMPLETED/CANCELLED)*",
-                    "Start Date (YYYY-MM-DD)*", "Due Date (YYYY-MM-DD)*"
+                    "Start Date (YYYY-MM-DD)", "Due Date (YYYY-MM-DD)"
             };
 
             Row headerRow = templateSheet.createRow(0);

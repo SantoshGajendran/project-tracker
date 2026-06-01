@@ -5,7 +5,7 @@ import { catchError, throwError } from 'rxjs';
 
 export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
-  const token = localStorage.getItem('token');
+  const token = sessionStorage.getItem('token');
 
   let authReq = req;
   if (token) {
@@ -20,7 +20,7 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((error: HttpErrorResponse) => {
       // Auto-redirect to login on 401 Unauthorized
       if (error.status === 401) {
-        localStorage.removeItem('token');
+        sessionStorage.removeItem('token');
         router.navigate(['/login']);
       }
       return throwError(() => error);

@@ -1,9 +1,15 @@
 <div class="team-viewport">
   <!-- Team Members Grid View -->
   <div *ngIf="!selectedMember">
-    <div class="page-header">
-      <h1 class="page-title">Team Directory</h1>
-      <p class="page-subtitle">Workspace operators, roles, and real-time velocity metrics</p>
+    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+      <div>
+        <h1 class="page-title" style="margin: 0;">Team Directory</h1>
+        <p class="page-subtitle" style="margin: 4px 0 0 0;">Workspace operators, roles, and real-time velocity metrics</p>
+      </div>
+      <button *ngIf="authService.isManagerOrLead()" mat-raised-button color="primary" (click)="openCreateTeammateDialog()" style="height: 40px; display: flex; align-items: center; gap: 8px;">
+        <mat-icon style="margin: 0; font-size: 20px; width: 20px; height: 20px;">add</mat-icon>
+        Create Teammate
+      </button>
     </div>
 
     <!-- Loading spinner -->
@@ -49,9 +55,15 @@
 
   <!-- Selected Member Profile View -->
   <div *ngIf="selectedMember" class="member-profile-view">
-    <button mat-button class="back-link" (click)="selectedMember = undefined">
-      <mat-icon>arrow_back</mat-icon> Back to Team Directory
-    </button>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <button mat-button class="back-link" (click)="selectedMember = undefined">
+        <mat-icon>arrow_back</mat-icon> Back to Team Directory
+      </button>
+      <button *ngIf="authService.isManagerOrLead()" mat-raised-button color="primary" (click)="openEditTeammateDialog(selectedMember)" style="height: 40px; display: flex; align-items: center; gap: 8px;">
+        <mat-icon style="margin: 0; font-size: 20px; width: 20px; height: 20px;">edit</mat-icon>
+        Edit Teammate
+      </button>
+    </div>
 
     <div class="profile-grid">
       <!-- Profile Sidebar Panel -->

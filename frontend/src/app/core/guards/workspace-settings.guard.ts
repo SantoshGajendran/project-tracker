@@ -7,7 +7,7 @@ export const workspaceSettingsGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  if (!localStorage.getItem('token')) {
+  if (!sessionStorage.getItem('token')) {
     router.navigate(['/login']);
     return false;
   }

@@ -190,33 +190,7 @@ import { loginAnimations } from './login.animations';
             </button>
           </div>
 
-          <!-- Sandbox Accounts -->
-          <div class="demo-section">
-            <div class="demo-title">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="info-icon">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="16" x2="12" y2="12"></line>
-                <line x1="12" y1="8" x2="12.01" y2="8"></line>
-              </svg>
-              <span>Sandbox Environments</span>
-            </div>
-            <div class="demo-cards">
-              <div class="demo-card" (click)="fillCreds('pm@projecttracker.com')">
-                <div class="card-lead">
-                  <span class="role-badge manager">PM</span>
-                  <span class="role-title">Project Manager</span>
-                </div>
-                <span class="role-email">pm&#64;projecttracker.com</span>
-              </div>
-              <div class="demo-card" (click)="fillCreds('john@projecttracker.com')">
-                <div class="card-lead">
-                  <span class="role-badge member">DEV</span>
-                  <span class="role-title">Team Member</span>
-                </div>
-                <span class="role-email">john&#64;projecttracker.com</span>
-              </div>
-            </div>
-          </div>
+
         </div>
       </div>
     </div>
@@ -843,89 +817,7 @@ import { loginAnimations } from './login.animations';
       height: 16px;
     }
 
-    /* ─── SANDBOX ENVIRONMENTS ─── */
-    .demo-section {
-      border-top: 1px dashed var(--border-default);
-      padding-top: var(--space-xl);
-    }
 
-    .demo-title {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-muted);
-      margin-bottom: var(--space-md);
-    }
-
-    .info-icon {
-      width: 14px;
-      height: 14px;
-      color: var(--accent);
-    }
-
-    .demo-cards {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: var(--space-md);
-    }
-
-    .demo-card {
-      padding: var(--space-md);
-      background: var(--bg-surface);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      cursor: pointer;
-      transition: border-color var(--duration-fast), background-color var(--duration-fast), transform var(--duration-fast);
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .demo-card:hover {
-      border-color: var(--accent);
-      background: var(--accent-glow);
-      transform: translateY(-1px);
-    }
-
-    .card-lead {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .role-badge {
-      font-family: var(--font-mono);
-      font-size: 9px;
-      font-weight: 600;
-      padding: 1px 4px;
-      border-radius: 4px;
-    }
-
-    .role-badge.manager {
-      background: rgba(99, 179, 237, 0.12);
-      color: var(--accent);
-    }
-
-    .role-badge.member {
-      background: rgba(104, 211, 145, 0.12);
-      color: var(--status-active);
-    }
-
-    .role-title {
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text-primary);
-    }
-
-    .role-email {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      color: var(--text-secondary);
-    }
 
     /* ─── RESPONSIVE LAYOUTS ─── */
     @media (max-width: 900px) {
@@ -949,10 +841,6 @@ import { loginAnimations } from './login.animations';
         gap: var(--space-sm);
         margin-bottom: var(--space-lg);
       }
-      .demo-cards {
-        grid-template-columns: 1fr;
-        gap: var(--space-sm);
-      }
     }
   `]
 })
@@ -973,7 +861,7 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnInit(): void {
     // Auto-redirect if already authenticated or token exists
-    if (this.authService.isAuthenticated() || localStorage.getItem('token')) {
+    if (this.authService.isAuthenticated() || sessionStorage.getItem('token')) {
       this.router.navigate(['/']);
       return;
     }
@@ -999,13 +887,7 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
     return !!(control && control.invalid && (control.dirty || control.touched));
   }
 
-  fillCreds(email: string): void {
-    this.loginForm.patchValue({
-      email: email,
-      password: 'password'
-    });
-    this.loginForm.markAsDirty();
-  }
+
 
   onSubmit(): void {
     if (this.loginForm.invalid) return;

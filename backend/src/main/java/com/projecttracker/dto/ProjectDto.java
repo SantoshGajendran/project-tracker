@@ -33,10 +33,8 @@ public class ProjectDto {
     @NotNull(message = "Priority is required")
     private ProjectPriority priority;
 
-    @NotNull(message = "Start date is required")
     private LocalDate startDate;
 
-    @NotNull(message = "Due date is required")
     private LocalDate dueDate;
 
     private double progress;

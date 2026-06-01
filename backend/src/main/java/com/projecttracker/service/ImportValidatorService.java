@@ -72,16 +72,22 @@ public class ImportValidatorService {
                     hasError = true;
                 }
 
-                LocalDate startDate = parseDate(row.getCell(4), startStr);
-                if (startDate == null) {
-                    invalidRows.add(new ImportErrorDto(rowNum, "Start Date", startStr, "Invalid start date format (use YYYY-MM-DD)."));
-                    hasError = true;
+                LocalDate startDate = null;
+                if (!startStr.isEmpty()) {
+                    startDate = parseDate(row.getCell(4), startStr);
+                    if (startDate == null) {
+                        invalidRows.add(new ImportErrorDto(rowNum, "Start Date", startStr, "Invalid start date format (use YYYY-MM-DD)."));
+                        hasError = true;
+                    }
                 }
 
-                LocalDate dueDate = parseDate(row.getCell(5), dueStr);
-                if (dueDate == null) {
-                    invalidRows.add(new ImportErrorDto(rowNum, "Due Date", dueStr, "Invalid due date format (use YYYY-MM-DD)."));
-                    hasError = true;
+                LocalDate dueDate = null;
+                if (!dueStr.isEmpty()) {
+                    dueDate = parseDate(row.getCell(5), dueStr);
+                    if (dueDate == null) {
+                        invalidRows.add(new ImportErrorDto(rowNum, "Due Date", dueStr, "Invalid due date format (use YYYY-MM-DD)."));
+                        hasError = true;
+                    }
                 }
 
                 if (startDate != null && dueDate != null && dueDate.isBefore(startDate)) {

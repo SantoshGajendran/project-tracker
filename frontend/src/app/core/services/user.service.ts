@@ -28,6 +28,10 @@ export class UserService {
     return this.http.put<ApiResponse<User>>(`${this.apiUrl}/${id}`, profile);
   }
 
+  createUser(user: any): Observable<ApiResponse<User>> {
+    return this.http.post<ApiResponse<User>>(this.apiUrl, user);
+  }
+
   deleteUser(id: number): Observable<ApiResponse<void>> {
     return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/${id}`);
   }

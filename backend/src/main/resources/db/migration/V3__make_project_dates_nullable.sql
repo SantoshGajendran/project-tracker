@@ -1,0 +1,2 @@
+ALTER TABLE projects ALTER COLUMN start_date DROP NOT NULL;
+ALTER TABLE projects ALTER COLUMN due_date DROP NOT NULL;
