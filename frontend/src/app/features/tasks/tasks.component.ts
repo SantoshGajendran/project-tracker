@@ -24,6 +24,8 @@ import { ConfirmationDialogComponent } from '../../shared/confirmation-dialog/co
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { TaskPermissionService } from '../../core/services/task-permission.service';
 import { TaskDetailDialogComponent } from './detail/task-detail-dialog.component';
+import { LogHoursDialogComponent } from './log-hours-dialog.component';
+import { TimeEntryService } from '../../core/services/time-entry.service';
 
 @Component({
   selector: 'app-tasks',
@@ -56,6 +58,8 @@ export class TasksComponent implements OnInit {
   snackBar = inject(MatSnackBar);
   route = inject(ActivatedRoute);
   permissionService = inject(TaskPermissionService);
+  timeEntryService = inject(TimeEntryService);
+  taskHoursMap = new Map<number, { current: number; remaining: number }>();
 
   tasks: Task[] = [];
   projects: Project[] = [];
@@ -110,11 +114,33 @@ export class TasksComponent implements OnInit {
       next: (res) => {
         if (res.success) {
           this.tasks = res.data.content || [];
+          this.loadTaskHours();
         }
         this.loading = false;
       },
       error: () => this.loading = false
     });
+  }
+
+  loadTaskHours(): void {
+    this.taskHoursMap.clear();
+    for (const task of this.tasks) {
+      this.timeEntryService.getTotalHoursForTask(task.id).subscribe({
+        next: (res) => {
+          if (res.success) {
+            const current = res.data.totalHours || 0;
+            this.taskHoursMap.set(task.id, {
+              current: current,
+              remaining: Math.max(0, 13 - current)
+            });
+          }
+        }
+      });
+    }
+  }
+
+  getTaskHours(taskId: number): { current: number; remaining: number } {
+    return this.taskHoursMap.get(taskId) || { current: 0, remaining: 13 };
   }
 
   onStatusChange(taskId: number, status: string): void {
@@ -247,6 +273,25 @@ export class TasksComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.loadTasks();
+      }
+    });
+  }
+
+  openLogHoursDialog(task: Task): void {
+    const dialogRef = this.dialog.open(LogHoursDialogComponent, {
+      width: '450px',
+      data: {
+        taskId: task.id,
+        taskTitle: task.title,
+        projectId: task.projectId,
+        projectName: task.projectName
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.snackBar.open('Hours logged successfully', 'Close', { duration: 3000 });
+        this.loadTaskHours();
       }
     });
   }

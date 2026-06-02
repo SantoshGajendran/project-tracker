@@ -229,3 +229,48 @@
   padding-bottom: 8px !important;
   min-height: unset !important;
 }
+
+/* Hours Column */
+.hours-cell {
+  min-width: 100px;
+}
+
+.hours-display {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.hours-value {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 13px;
+  color: #1976D2;
+}
+
+.hours-value.hours-full {
+  color: #C62828;
+}
+
+.hours-separator {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.hours-max {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.log-hours-btn {
+  width: 28px;
+  height: 28px;
+  line-height: 28px;
+  margin-left: 4px;
+}
+
+.log-hours-btn ::ng-deep .mat-mdc-button-touch-target {
+  width: 28px;
+  height: 28px;
+}

@@ -304,6 +304,7 @@ export class SidebarComponent {
     { icon: 'playlist_add_check', label: 'Tasks', route: '/tasks' },
     { icon: 'group', label: 'Team', route: '/team' },
     { icon: 'timeline', label: 'Sprints', route: '/sprints' },
+    { icon: 'payments', label: 'Billing', route: '/billing' },
     { icon: 'cloud_upload', label: 'SheetLoad', route: '/import' },
     { icon: 'settings', label: 'Settings', route: '/settings' }
   ];

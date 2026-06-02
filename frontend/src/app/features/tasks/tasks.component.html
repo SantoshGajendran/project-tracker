@@ -96,6 +96,7 @@
             <th>Priority</th>
             <th>Status</th>
             <th>Due Date</th>
+            <th>Hours</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -137,10 +138,21 @@
             <td class="date-cell" [ngClass]="{'overdue': isOverdue(t)}">
               {{ t.dueDate ? (t.dueDate | date:'mediumDate') : 'No due date' }}
             </td>
+            <td class="hours-cell">
+              <div class="hours-display">
+                <span class="hours-value" [ngClass]="{'hours-full': getTaskHours(t.id).current >= 13}">
+                  {{ getTaskHours(t.id).current }}h
+                </span>
+                <span class="hours-separator">/</span>
+                <span class="hours-max">13h</span>
+                <button mat-icon-button color="accent" (click)="openLogHoursDialog(t)" title="Log Hours" class="log-hours-btn">
+                  <mat-icon style="font-size:18px;">schedule</mat-icon>
+                </button>
+              </div>
+            </td>
             <td>
               <div class="actions-cell">
                 <button 
-                  *ngIf="authService.isManagerOrLead()" 
                   mat-icon-button 
                   color="warn" 
                   (click)="deleteTask(t.id)" 

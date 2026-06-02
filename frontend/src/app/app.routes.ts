@@ -59,6 +59,10 @@ export const routes: Routes = [
         ]
       },
       {
+        path: 'billing',
+        loadComponent: () => import('./features/billing/billing-dashboard.component').then(m => m.BillingDashboardComponent)
+      },
+      {
         path: 'import',
         loadComponent: () => import('./features/sheetload/sheetload.component').then(m => m.SheetLoadComponent)
       }
