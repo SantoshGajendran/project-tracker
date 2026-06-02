@@ -62,7 +62,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         user.setEmail(info.getEmail());
         user.setAvatar(info.getImageUrl());
         user.setEmailVerified(true);
-        user.setRole(UserRole.TEAMMATE); // default role for social logins
+        user.setRole(UserRole.MEMBER); // default role for social logins
         user.setCreatedAt(Instant.now());
         return userRepo.save(user);
     }

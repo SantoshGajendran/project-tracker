@@ -5,7 +5,7 @@ export interface ApiResponse<T> {
   timestamp: string;
 }
 
-export type UserRole = 'MANAGER' | 'TEAM_LEAD' | 'TEAMMATE';
+export type UserRole = 'MANAGER' | 'TEAM_LEAD' | 'MEMBER' | 'VIEWER';
 export type ProjectStatus = 'PLANNING' | 'IN_PROGRESS' | 'ON_HOLD' | 'COMPLETED' | 'CANCELLED';
 export type ProjectPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'IN_REVIEW' | 'DONE';

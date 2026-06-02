@@ -293,8 +293,8 @@ public class TaskService {
     }
 
     private void validateTaskUpdatePermission(Task task, User performer) {
-        // TEAMMATE role can only update tasks assigned to them
-        if (performer.getRole() == UserRole.TEAMMATE) {
+        // MEMBER role can only update tasks assigned to them
+        if (performer.getRole() == UserRole.MEMBER) {
             if (task.getAssignedTo() == null || !task.getAssignedTo().getId().equals(performer.getId())) {
                 throw new AccessDeniedException("You can only update tasks assigned to you.");
             }

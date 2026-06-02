@@ -1,6 +1,7 @@
 package com.projecttracker.exception;
 
 import com.projecttracker.dto.ApiResponse;
+import com.projecttracker.dto.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -40,9 +41,17 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ApiResponse<Void>> handleAccessDenied(AccessDeniedException ex) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(ApiResponse.error("You do not have permission to perform this action"));
+    public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+            ErrorResponse.builder()
+                .status(403)
+                .code("TASK_ACCESS_DENIED")
+                .message("You do not have permission to edit this task. " +
+                         "Only project members can edit tasks, " +
+                         "and members can only edit tasks assigned to them.")
+                .timestamp(java.time.Instant.now())
+                .build()
+        );
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

@@ -107,7 +107,7 @@
             <td class="task-title-cell">
               <div class="title-cell-content">
                 <mat-icon *ngIf="isOverdue(t)" class="overdue-icon" title="Overdue Task">error_outline</mat-icon>
-                <span>{{ t.title }}</span>
+                <a href="javascript:void(0)" (click)="openTaskDetailDialog(t)" class="task-title-link">{{ t.title }}</a>
               </div>
             </td>
             <td>
@@ -125,6 +125,7 @@
               <!-- Dropdown status modification if performer has access -->
               <mat-select 
                 [value]="t.status" 
+                [disabled]="!canEditTask(t)"
                 (selectionChange)="onStatusChange(t.id, $event.value)"
                 class="status-dropdown">
                 <mat-option value="TODO">To Do</mat-option>
@@ -139,7 +140,7 @@
             <td>
               <div class="actions-cell">
                 <button 
-                  *ngIf="authService.isManager()" 
+                  *ngIf="authService.isManagerOrLead()" 
                   mat-icon-button 
                   color="warn" 
                   (click)="deleteTask(t.id)" 

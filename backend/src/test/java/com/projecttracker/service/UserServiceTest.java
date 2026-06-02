@@ -53,7 +53,7 @@ public class UserServiceTest {
                 .id(1L)
                 .name("John Doe")
                 .email("john@test.com")
-                .role(UserRole.TEAMMATE)
+                .role(UserRole.MEMBER)
                 .createdAt(Instant.now().minus(5, ChronoUnit.DAYS))
                 .build();
     }

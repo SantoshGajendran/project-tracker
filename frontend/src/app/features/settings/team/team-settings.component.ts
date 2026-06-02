@@ -47,7 +47,8 @@ interface PendingInvite {
           <select formControlName="role" class="input-field select-field">
             <option value="MANAGER">Manager</option>
             <option value="TEAM_LEAD">Team Lead</option>
-            <option value="TEAMMATE">Member</option>
+            <option value="MEMBER">Member</option>
+            <option value="VIEWER">Viewer</option>
           </select>
           <button type="submit" class="btn-primary" [disabled]="inviteForm.invalid || inviting">
             <i class="ti ti-send"></i> Send Invite
@@ -85,7 +86,8 @@ interface PendingInvite {
             <option value="ALL">All Roles</option>
             <option value="MANAGER">Manager</option>
             <option value="TEAM_LEAD">Team Lead</option>
-            <option value="TEAMMATE">Member</option>
+            <option value="MEMBER">Member</option>
+            <option value="VIEWER">Viewer</option>
           </select>
           <span class="mono muted member-count">{{ filteredMembers.length }} member{{ filteredMembers.length !== 1 ? 's' : '' }}</span>
         </div>
@@ -130,7 +132,8 @@ interface PendingInvite {
                     >
                       <option value="MANAGER">MANAGER</option>
                       <option value="TEAM_LEAD">TEAM_LEAD</option>
-                      <option value="TEAMMATE">MEMBER</option>
+                      <option value="MEMBER">MEMBER</option>
+                      <option value="VIEWER">VIEWER</option>
                     </select>
                   </div>
                 </td>
@@ -462,10 +465,17 @@ interface PendingInvite {
       border-color: rgba(124, 58, 237, 0.2) !important;
     }
 
-    .role-select.teammate {
+    .role-select.teammate,
+    .role-select.member {
       background: rgba(22, 163, 74, 0.08) !important;
       color: var(--status-active) !important;
       border-color: rgba(22, 163, 74, 0.2) !important;
+    }
+
+    .role-select.viewer {
+      background: rgba(156, 163, 175, 0.08) !important;
+      color: var(--text-muted) !important;
+      border-color: rgba(156, 163, 175, 0.2) !important;
     }
 
     .role-select[disabled] {
@@ -620,7 +630,7 @@ export class TeamSettingsComponent implements OnInit {
     this.inviteForm = this.fb.group({
       name: ['', [Validators.required]],
       email: ['', [Validators.required, Validators.email]],
-      role: ['TEAMMATE']
+      role: ['MEMBER']
     });
     this.loadMembers();
   }
@@ -694,7 +704,7 @@ export class TeamSettingsComponent implements OnInit {
       next: (res) => {
         if (res.success) {
           this.snackBar.open(`Invitation link sent to ${email}`, 'Close', { duration: 3000 });
-          this.inviteForm.reset({ role: 'TEAMMATE' });
+          this.inviteForm.reset({ role: 'MEMBER' });
           this.loadMembers(); // Refresh list
         }
         this.inviting = false;

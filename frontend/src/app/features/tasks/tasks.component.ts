@@ -22,6 +22,8 @@ import { AvatarComponent } from '../../shared/avatar/avatar.component';
 import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
 import { ConfirmationDialogComponent } from '../../shared/confirmation-dialog/confirmation-dialog.component';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { TaskPermissionService } from '../../core/services/task-permission.service';
+import { TaskDetailDialogComponent } from './detail/task-detail-dialog.component';
 
 @Component({
   selector: 'app-tasks',
@@ -53,6 +55,7 @@ export class TasksComponent implements OnInit {
   dialog = inject(MatDialog);
   snackBar = inject(MatSnackBar);
   route = inject(ActivatedRoute);
+  permissionService = inject(TaskPermissionService);
 
   tasks: Task[] = [];
   projects: Project[] = [];
@@ -217,6 +220,33 @@ export class TasksComponent implements OnInit {
             }
           }
         });
+      }
+    });
+  }
+
+  canEditTask(task: Task): boolean {
+    const user = this.authService.currentUser();
+    if (!user) return false;
+    if (user.role === 'MANAGER') return true;
+    if (user.role === 'VIEWER') return false;
+    if (user.role === 'TEAM_LEAD') return true;
+    if (user.role === 'MEMBER') {
+      return task.assignedToId === user.id;
+    }
+    return false;
+  }
+
+  openTaskDetailDialog(task: Task): void {
+    const dialogRef = this.dialog.open(TaskDetailDialogComponent, {
+      width: '600px',
+      data: {
+        task: task
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loadTasks();
       }
     });
   }

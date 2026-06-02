@@ -27,6 +27,8 @@ import { EmptyStateComponent } from '../../../shared/empty-state/empty-state.com
 import { ConfirmationDialogComponent } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
 import { SpringPhysicsService } from '../../../core/services/spring-physics.service';
 import { SpringCardDirective } from '../../../shared/directives/spring-card.directive';
+import { TaskPermissionService } from '../../../core/services/task-permission.service';
+import { TaskDetailDialogComponent } from '../../../features/tasks/detail/task-detail-dialog.component';
 
 @Component({
   selector: 'app-project-detail',
@@ -63,6 +65,7 @@ export class ProjectDetailComponent implements OnInit {
   dialog = inject(MatDialog);
   snackBar = inject(MatSnackBar);
   springService = inject(SpringPhysicsService);
+  permissionService = inject(TaskPermissionService);
 
   projectId!: number;
   detail?: ProjectDetail;
@@ -165,6 +168,10 @@ export class ProjectDetailComponent implements OnInit {
       this.animateCardEntrance(el);
     } else {
       const task = event.previousContainer.data[event.previousIndex];
+      if (!this.canDragTask(task)) {
+        this.snackBar.open('You do not have permission to edit this task.', 'Close', { duration: 3000 });
+        return;
+      }
       const targetStatus = event.container.id as TaskStatus;
 
       // Optimistic UI update
@@ -386,6 +393,27 @@ export class ProjectDetailComponent implements OnInit {
         this.snackBar.open('Sprint created', 'Close', { duration: 3000 });
         this.loadSprints();
         this.loadActivity();
+      }
+    });
+  }
+
+  canDragTask(task: Task): boolean {
+    return this.permissionService.canEdit(task, this.detail?.members || []);
+  }
+
+  openTaskDetailDialog(task: Task): void {
+    const dialogRef = this.dialog.open(TaskDetailDialogComponent, {
+      width: '600px',
+      data: {
+        task: task,
+        projectMembers: this.detail?.members || [],
+        sprints: this.sprints
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loadProjectDetails();
       }
     });
   }

@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -40,6 +41,7 @@ public class TaskController {
     }
 
     @PostMapping
+    @PreAuthorize("@taskSecurity.canCreateTaskInProject(#taskDto.projectId, principal)")
     public ResponseEntity<ApiResponse<TaskDto>> createTask(
             @Valid @RequestBody TaskDto taskDto,
             @AuthenticationPrincipal User user) {
@@ -49,12 +51,14 @@ public class TaskController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("@taskSecurity.canViewTask(#id, principal)")
     public ResponseEntity<ApiResponse<TaskDto>> getTaskById(@PathVariable Long id) {
         TaskDto task = taskService.getTaskById(id);
         return ResponseEntity.ok(ApiResponse.success(task, "Task retrieved"));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("@taskSecurity.canEditTask(#id, principal)")
     public ResponseEntity<ApiResponse<TaskDto>> updateTask(
             @PathVariable Long id,
             @Valid @RequestBody TaskDto taskDto,
@@ -65,6 +69,7 @@ public class TaskController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("@taskSecurity.canDeleteTask(#id, principal)")
     public ResponseEntity<ApiResponse<Void>> deleteTask(
             @PathVariable Long id,
             @AuthenticationPrincipal User user) {
@@ -74,7 +79,7 @@ public class TaskController {
     }
 
     @DeleteMapping("/bulk")
-    @org.springframework.security.access.prepost.PreAuthorize("hasRole('MANAGER')")
+    @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<ApiResponse<Void>> deleteTasks(
             @RequestParam("ids") List<Long> ids,
             @AuthenticationPrincipal User user) {
@@ -83,6 +88,7 @@ public class TaskController {
     }
 
     @PatchMapping("/{id}/status")
+    @PreAuthorize("@taskSecurity.canEditTask(#id, principal)")
     public ResponseEntity<ApiResponse<TaskDto>> patchStatus(
             @PathVariable Long id,
             @RequestParam TaskStatus status,
@@ -93,6 +99,7 @@ public class TaskController {
     }
 
     @PatchMapping("/{id}/assign")
+    @PreAuthorize("hasAnyRole('MANAGER', 'TEAM_LEAD') and @taskSecurity.canEditTask(#id, principal)")
     public ResponseEntity<ApiResponse<TaskDto>> patchAssignee(
             @PathVariable Long id,
             @RequestParam(required = false) Long assigneeId,
@@ -115,6 +122,7 @@ public class TaskController {
     }
 
     @PostMapping("/{id}/comments")
+    @PreAuthorize("@taskSecurity.canViewTask(#id, principal)")
     public ResponseEntity<ApiResponse<CommentDto>> addComment(
             @PathVariable Long id,
             @Valid @RequestBody CommentDto commentDto,
